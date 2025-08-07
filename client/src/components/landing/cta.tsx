@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
+import EarlyAccessForm from "@/components/ui/early-access-form";
+import { useState } from "react";
 
 export default function CTA() {
+  const [showDemoForm, setShowDemoForm] = useState(false);
+  const [showSalesForm, setShowSalesForm] = useState(false);
+  
   return (
     <section className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 text-white py-20 px-6 text-center overflow-hidden">
       <div className="absolute inset-0 opacity-10">
@@ -26,6 +31,7 @@ export default function CTA() {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button 
+            onClick={() => setShowDemoForm(true)}
             className="inline-flex items-center justify-center bg-white text-blue-600 font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-white/25 hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 group relative overflow-hidden"
             data-testid="button-request-demo-cta"
           >
@@ -34,6 +40,7 @@ export default function CTA() {
             <MessageCircle className="w-5 h-5 ml-2 relative transition-transform group-hover:rotate-12" />
           </Button>
           <Button 
+            onClick={() => setShowSalesForm(true)}
             variant="outline"
             className="inline-flex items-center justify-center backdrop-blur-xl bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 group relative overflow-hidden"
             data-testid="button-contact-sales"
@@ -47,6 +54,18 @@ export default function CTA() {
           No credit card required • 14-day free trial • Setup in minutes
         </p>
       </div>
+      
+      <EarlyAccessForm
+        signupType="demo_request"
+        isOpen={showDemoForm}
+        onClose={() => setShowDemoForm(false)}
+      />
+      
+      <EarlyAccessForm
+        signupType="contact_sales"
+        isOpen={showSalesForm}
+        onClose={() => setShowSalesForm(false)}
+      />
     </section>
   );
 }

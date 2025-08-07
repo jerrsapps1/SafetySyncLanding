@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
+import EarlyAccessForm from "@/components/ui/early-access-form";
+import { useState } from "react";
 
 export default function Hero() {
+  const [showEarlyAccessForm, setShowEarlyAccessForm] = useState(false);
+  const [showDemoForm, setShowDemoForm] = useState(false);
+
   return (
     <section className="relative px-6 py-24 text-center max-w-5xl mx-auto overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-blue-600/5 to-transparent rounded-3xl -z-10"></div>
@@ -28,6 +33,7 @@ export default function Hero() {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button 
+            onClick={() => setShowEarlyAccessForm(true)}
             className="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 relative overflow-hidden group"
             data-testid="button-early-access"
           >
@@ -36,6 +42,7 @@ export default function Hero() {
             <ArrowRight className="w-5 h-5 ml-2 relative transition-transform group-hover:translate-x-1" />
           </Button>
           <Button 
+            onClick={() => setShowDemoForm(true)}
             variant="outline" 
             className="inline-flex items-center justify-center backdrop-blur-xl bg-white/5 hover:bg-white/10 border border-white/20 hover:border-white/30 transition-all duration-300 text-white font-semibold py-4 px-8 rounded-xl group relative overflow-hidden"
             data-testid="button-watch-demo"
@@ -45,6 +52,18 @@ export default function Hero() {
             <span className="relative">Watch Demo</span>
           </Button>
         </div>
+        
+        <EarlyAccessForm
+          signupType="early_access"
+          isOpen={showEarlyAccessForm}
+          onClose={() => setShowEarlyAccessForm(false)}
+        />
+        
+        <EarlyAccessForm
+          signupType="demo_request"
+          isOpen={showDemoForm}
+          onClose={() => setShowDemoForm(false)}
+        />
         
         <div className="mt-16 pt-8 border-t border-white/10">
           <p className="text-gray-500 text-sm mb-6">Trusted by safety professionals at</p>

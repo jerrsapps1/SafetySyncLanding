@@ -1,8 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import Logo from "@/components/ui/logo";
+import EarlyAccessForm from "@/components/ui/early-access-form";
+import { useState } from "react";
 
 export default function Navigation() {
+  const [showDemoForm, setShowDemoForm] = useState(false);
+  
   return (
     <nav className="relative px-6 py-4 backdrop-blur-xl bg-gray-950/90 border-b border-white/10">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5"></div>
@@ -44,6 +48,7 @@ export default function Navigation() {
             Sign In
           </Button>
           <Button 
+            onClick={() => setShowDemoForm(true)}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-white font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5"
             data-testid="button-request-demo"
           >
@@ -55,6 +60,12 @@ export default function Navigation() {
           <Menu className="w-6 h-6" />
         </Button>
       </div>
+      
+      <EarlyAccessForm
+        signupType="demo_request"
+        isOpen={showDemoForm}
+        onClose={() => setShowDemoForm(false)}
+      />
     </nav>
   );
 }
