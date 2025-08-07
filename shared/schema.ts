@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -9,10 +9,30 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
+export const earlyAccessSignups = pgTable("early_access_signups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").unique().notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  company: text("company"),
+  jobTitle: text("job_title"),
+  signupType: text("signup_type").notNull(), // 'early_access', 'demo_request', 'contact_sales'
+  emailSent: boolean("email_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
 });
 
+export const insertEarlyAccessSchema = createInsertSchema(earlyAccessSignups).omit({
+  id: true,
+  emailSent: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertEarlyAccess = z.infer<typeof insertEarlyAccessSchema>;
+export type EarlyAccessSignup = typeof earlyAccessSignups.$inferSelect;
