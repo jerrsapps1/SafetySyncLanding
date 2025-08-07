@@ -1,4 +1,5 @@
 import { Twitter, Linkedin } from "lucide-react";
+import Logo from "@/components/ui/logo";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -8,9 +9,9 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-1 md:col-span-2">
-            <a href="/" className="flex items-center space-x-2 mb-4 group transition-all duration-300 hover:scale-105" data-testid="link-home-logo-footer">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-all duration-300">
-                <span className="text-white font-bold text-sm">S</span>
+            <a href="/" className="flex items-center space-x-3 mb-4 group transition-all duration-300 hover:scale-105" data-testid="link-home-logo-footer">
+              <div className="group-hover:drop-shadow-lg transition-all duration-300">
+                <Logo width={32} height={32} className="group-hover:brightness-110" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-300">SafetySync.ai</span>
             </a>

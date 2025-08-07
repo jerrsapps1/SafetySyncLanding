@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import Logo from "@/components/ui/logo";
 
 export default function Navigation() {
   return (
     <nav className="relative px-6 py-4 backdrop-blur-xl bg-gray-950/90 border-b border-white/10">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5"></div>
       <div className="max-w-6xl mx-auto flex items-center justify-between relative">
-        <a href="/" className="flex items-center space-x-2 group transition-all duration-300 hover:scale-105" data-testid="link-home-logo">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-all duration-300">
-            <span className="text-white font-bold text-sm">S</span>
+        <a href="/" className="flex items-center space-x-3 group transition-all duration-300 hover:scale-105" data-testid="link-home-logo">
+          <div className="group-hover:drop-shadow-lg transition-all duration-300">
+            <Logo width={32} height={32} className="group-hover:brightness-110" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-300">SafetySync.ai</span>
         </a>
