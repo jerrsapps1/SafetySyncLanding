@@ -6,6 +6,8 @@ SafetySync.ai is a modern web application designed to automate OSHA compliance t
 
 The landing page features a sophisticated dark theme with tech-forward design elements including animated gradients, glassmorphism effects, floating background orbs, and modern interactive animations. The design uses a blue-to-purple gradient color scheme throughout for a cohesive, professional appearance.
 
+The custom SafetySync.AI logo has been integrated as a clickable home button in both navigation and footer, featuring a shield design with AI circuitry patterns and compliance checkmark that perfectly represents the brand's focus on AI-powered OSHA compliance automation.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
