@@ -8,12 +8,12 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <a href="/" className="flex items-center space-x-2 mb-4 group transition-all duration-300 hover:scale-105" data-testid="link-home-logo-footer">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-all duration-300">
                 <span className="text-white font-bold text-sm">S</span>
               </div>
-              <span className="text-xl font-bold text-white">SafetySync.ai</span>
-            </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-300">SafetySync.ai</span>
+            </a>
             <p className="text-gray-400 max-w-md mb-6">
               Automate your OSHA compliance with AI-powered training record management. 
               Keep your workplace safe and audit-ready.
