@@ -7,11 +7,11 @@ export default function Testimonial() {
         </blockquote>
         <div className="flex items-center justify-center space-x-4">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold" data-testid="img-testimonial-avatar">
-            JD
+            JH
           </div>
           <div className="text-left">
-            <div className="text-white font-semibold" data-testid="text-testimonial-name">John Doe</div>
-            <div className="text-gray-400 text-sm" data-testid="text-testimonial-title">Safety Director, ACME Corp</div>
+            <div className="text-white font-semibold" data-testid="text-testimonial-name">Jerry Hernandez SHEP, CSHO</div>
+            <div className="text-gray-400 text-sm" data-testid="text-testimonial-title">Safety Director, Alamo Environmental</div>
           </div>
         </div>
       </div>

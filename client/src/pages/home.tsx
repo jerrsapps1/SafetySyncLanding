@@ -1,10 +1,10 @@
-import Navigation from "@/components/landing/navigation";
-import Hero from "@/components/landing/hero";
-import Features from "@/components/landing/features";
-import Stats from "@/components/landing/stats";
-import Testimonial from "@/components/landing/testimonial";
-import CTA from "@/components/landing/cta";
-import Footer from "@/components/landing/footer";
+import Navigation from "../components/landing/navigation";
+import Hero from "../components/landing/hero";
+import Features from "../components/landing/features";
+import Stats from "../components/landing/stats";
+import Testimonial from "../components/landing/testimonial";
+import CTA from "../components/landing/cta";
+import Footer from "../components/landing/footer";
 
 export default function Home() {
   return (
