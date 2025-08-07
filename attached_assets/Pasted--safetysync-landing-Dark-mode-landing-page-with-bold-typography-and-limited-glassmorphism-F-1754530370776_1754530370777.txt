@@ -1,0 +1,152 @@
+// safetysync-landing: Dark mode landing page with bold typography and limited glassmorphism
+
+// File: src/App.tsx
+import React from 'react';
+import Hero from './components/Hero';
+import Features from './components/Features';
+import CTA from './components/CTA';
+import Footer from './components/Footer';
+
+function App() {
+  return (
+    <div className="bg-gray-950 text-white font-sans min-h-screen">
+      <Hero />
+      <Features />
+      <CTA />
+      <Footer />
+    </div>
+  );
+}
+
+export default App;
+
+
+// File: src/components/Hero.tsx
+import React from 'react';
+
+export default function Hero() {
+  return (
+    <section className="px-6 py-24 text-center max-w-4xl mx-auto">
+      <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-white mb-6">
+        Simplify OSHA Compliance<br />
+        <span className="text-blue-500">with AI Automation</span>
+      </h1>
+      <p className="text-gray-300 text-lg md:text-xl mb-8">
+        SafetySync.ai keeps your training records audit-ready — automatically.
+      </p>
+      <a
+        href="#"
+        className="inline-block bg-blue-600 hover:bg-blue-500 transition text-white font-bold py-3 px-6 rounded-xl shadow-lg"
+      >
+        Get Early Access
+      </a>
+    </section>
+  );
+}
+
+
+// File: src/components/Features.tsx
+import React from 'react';
+
+const features = [
+  {
+    title: 'Automated Recordkeeping',
+    desc: 'Capture, verify, and store OSHA training records with zero manual effort.',
+  },
+  {
+    title: 'Smart Certificate Generator',
+    desc: 'Instantly create professional certificates & wallet cards that meet compliance standards.',
+  },
+  {
+    title: 'Audit-Ready Dashboard',
+    desc: 'Track expirations, instructor uploads, and more in one powerful admin view.',
+  },
+];
+
+export default function Features() {
+  return (
+    <section className="bg-gray-900 py-20 px-6">
+      <div className="max-w-5xl mx-auto text-center">
+        <h2 className="text-3xl font-bold mb-12">What You Get with SafetySync.ai</h2>
+        <div className="grid md:grid-cols-3 gap-10">
+          {features.map((f, idx) => (
+            <div
+              key={idx}
+              className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-6 text-left shadow-lg hover:shadow-xl transition"
+            >
+              <h3 className="text-xl font-semibold text-white mb-2">{f.title}</h3>
+              <p className="text-gray-300 text-sm">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+// File: src/components/CTA.tsx
+import React from 'react';
+
+export default function CTA() {
+  return (
+    <section className="bg-blue-600 text-white py-16 px-6 text-center">
+      <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to automate compliance?</h2>
+      <p className="text-lg mb-8">Join the SafetySync.ai early access program today.</p>
+      <a
+        href="#"
+        className="inline-block bg-white text-blue-600 font-bold py-3 px-6 rounded-xl shadow hover:opacity-90"
+      >
+        Request a Demo
+      </a>
+    </section>
+  );
+}
+
+
+// File: src/components/Footer.tsx
+import React from 'react';
+
+export default function Footer() {
+  return (
+    <footer className="bg-gray-950 text-gray-500 text-center py-10 text-sm">
+      © {new Date().getFullYear()} SafetySync.ai — All rights reserved.
+    </footer>
+  );
+}
+
+
+// File: src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+
+// File: tailwind.config.ts
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+};
+export default config;
+
+
+// File: vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
