@@ -41,7 +41,7 @@ export default function Navigation() {
             About
           </a>
           <Button 
-            className="text-gray-300 hover:bg-transparent hover:text-transparent transition-colors bg-transparent border-none"
+            className="text-gray-300 hover:bg-transparent hover:text-gray-200 transition-colors bg-transparent border-none"
             data-testid="button-signin"
           >
             Sign In
