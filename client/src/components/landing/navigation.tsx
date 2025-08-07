@@ -3,13 +3,14 @@ import { Menu } from "lucide-react";
 
 export default function Navigation() {
   return (
-    <nav className="relative px-6 py-4 backdrop-blur-sm bg-gray-950/80 border-b border-white/10">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <nav className="relative px-6 py-4 backdrop-blur-xl bg-gray-950/90 border-b border-white/10">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5"></div>
+      <div className="max-w-6xl mx-auto flex items-center justify-between relative">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/25">
             <span className="text-white font-bold text-sm">S</span>
           </div>
-          <span className="text-xl font-bold text-white">SafetySync.ai</span>
+          <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">SafetySync.ai</span>
         </div>
         
         <div className="hidden md:flex items-center space-x-8">
@@ -42,7 +43,7 @@ export default function Navigation() {
             Sign In
           </Button>
           <Button 
-            className="bg-blue-600 hover:bg-blue-500 transition-colors text-white font-medium"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-white font-medium shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5"
             data-testid="button-request-demo"
           >
             Request Demo
