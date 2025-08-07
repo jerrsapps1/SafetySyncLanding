@@ -4,9 +4,12 @@
 
 SafetySync.ai is a modern web application designed to automate OSHA compliance through AI-powered training record management. The platform aims to eliminate manual paperwork, reduce compliance risks, and save time by automatically capturing, verifying, and storing OSHA training records. It features automated recordkeeping, smart certificate generation, and an audit-ready dashboard for tracking expirations and compliance status.
 
+The landing page features a sophisticated dark theme with tech-forward design elements including animated gradients, glassmorphism effects, floating background orbs, and modern interactive animations. The design uses a blue-to-purple gradient color scheme throughout for a cohesive, professional appearance.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Design preference: Tech-forward, modern design with sophisticated animations and glassmorphism effects.
 
 ## System Architecture
 
