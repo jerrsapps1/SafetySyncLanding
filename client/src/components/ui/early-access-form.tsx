@@ -100,8 +100,14 @@ export default function EarlyAccessForm({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-16" style={{ backgroundColor: 'rgba(0, 0, 0, 0.95)' }}>
-      <div className="absolute inset-0" style={{ backgroundColor: '#000000' }}></div>
+    <div 
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 backdrop-blur-md bg-black/50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div className="relative bg-gray-900 border border-white/20 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
         <button
           type="button"
