@@ -100,8 +100,8 @@ export default function EarlyAccessForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/90 backdrop-blur-md">
-      <div className="relative bg-gray-900/95 border border-white/20 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/95 backdrop-blur-xl">
+      <div className="relative bg-gray-900 border border-white/20 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
