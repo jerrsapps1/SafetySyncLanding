@@ -1,0 +1,204 @@
+Let’s lock in **React Router** for SafetySync.ai — it’s already Vite/React and will keep routing simple and consistent.
+
+### Why React Router fits best
+
+* You already have an SPA structure.
+* One `index.html` serves the whole app, with client‑side navigation.
+* Works seamlessly with the `_redirects` file we’ll keep in place for Cloudflare Pages.
+
+### Next steps
+
+1. **React Router wiring**
+
+   * Define `/`, `/privacy`, `/terms` in your `main.tsx` or router file.
+   * Import the `PrivacyPolicy` and `TermsOfService` components from your `pages` folder.
+2. **Consent audit logging** (optional but recommended for compliance)
+
+   * Add an Express API route on your backend to receive consent objects.
+   * Store them in PostgreSQL with a schema like:
+
+     ```sql
+     CREATE TABLE consent_logs (
+       id SERIAL PRIMARY KEY,
+       user_id UUID NULL,
+       consent JSONB NOT NULL,
+       ip_address INET NULL,
+       user_agent TEXT NULL,
+       created_at TIMESTAMP DEFAULT now()
+     );
+     ```
+   * Call this API from the `useConsent` hook whenever the user saves their settings.
+
+If you’d like, I can now:
+
+* Write the **React Router route code** for Privacy and Terms.
+* Build the **Express endpoint** + DB insert logic for consent audit trail.
+
+---
+
+## 9) Finalize React Router + mount components
+
+Make sure `Root` is rendered at your entry (e.g., `src/main.tsx` + `index.html` root). In your `App` component (home), keep these near the root so they are always available:
+
+```tsx
+import Analytics from '@/components/Analytics';
+import CookieConsent from '@/components/CookieConsent';
+
+export default function App() {
+  return (
+    <>
+      {/* ... your routes/components ... */}
+      <Analytics />
+      <CookieConsent />
+    </>
+  );
+}
+```
+
+Ensure `public/_redirects` contains the SPA fallback (already included above).
+
+---
+
+## 10) Backend: Consent audit trail (Express + PostgreSQL)
+
+> Works with your existing Node/Express backend. Uses `pg` (node‑postgres). Adjust paths if your entry file differs.
+
+### a) Install dependency
+
+```bash
+npm i pg
+```
+
+### b) Environment
+
+Add to your backend `.env`:
+
+```
+DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DBNAME
+ALLOWED_ORIGIN=https://safetysync.ai
+```
+
+### c) Create table (SQL)
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE TABLE IF NOT EXISTS consent_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id TEXT,
+  user_id TEXT,
+  action TEXT NOT NULL,              -- 'accept_all' | 'reject_all' | 'save'
+  categories JSONB NOT NULL,         -- { essential: true, analytics: false, ... }
+  page TEXT,
+  ip INET,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+### d) Express wiring (`server/index.ts`)
+
+```ts
+import express from 'express';
+import cors from 'cors';
+import { Pool } from 'pg';
+
+const app = express();
+app.use(express.json());
+
+// CORS (adjust if frontend served from a different domain)
+const allowed = process.env.ALLOWED_ORIGIN || 'https://safetysync.ai';
+app.use(cors({ origin: allowed, credentials: true }));
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+app.post('/api/consent', async (req, res) => {
+  try {
+    const { categories, action, sessionId, userId, page } = req.body || {};
+    if (!categories || !action) return res.status(400).json({ error: 'Missing categories or action' });
+
+    const ip = (req.headers['cf-connecting-ip'] as string) || req.ip;
+    const userAgent = req.headers['user-agent'] as string;
+
+    await pool.query(
+      `INSERT INTO consent_events (session_id, user_id, action, categories, page, ip, user_agent)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [sessionId || null, userId || null, action, categories, page || null, ip || null, userAgent || null]
+    );
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('consent insert failed', e);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+// export app / start server as you already do...
+```
+
+---
+
+## 11) Frontend: POST consent decisions to backend
+
+Add a tiny client util and call it from the consent component when users save/accept/reject.
+
+### a) `src/lib/consent-api.ts`
+
+```ts
+export async function postConsent(action: 'accept_all'|'reject_all'|'save', categories: any, page?: string) {
+  try {
+    await fetch(`${import.meta.env.VITE_API_URL || ''}/api/consent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action, categories, page, sessionId: getSessionId() }),
+    });
+  } catch (e) {
+    // non‑blocking; fail silently
+  }
+}
+
+function getSessionId() {
+  const k = 'ssai.sid';
+  let v = localStorage.getItem(k);
+  if (!v) { v = Math.random().toString(36).slice(2); localStorage.setItem(k, v); }
+  return v;
+}
+```
+
+### b) Patch `CookieConsent.tsx` to call API
+
+```tsx
+import { postConsent } from '@/lib/consent-api';
+
+const onSave = (e?: React.FormEvent) => {
+  e?.preventDefault();
+  postConsent('save', consent, window.location.pathname);
+  setOpen(false);
+};
+
+const onAcceptAll = () => {
+  acceptAll();
+  postConsent('accept_all', { ...consent, analytics: true, marketing: true, preferences: true }, window.location.pathname);
+};
+
+const onRejectAll = () => {
+  rejectAll();
+  postConsent('reject_all', { ...consent, analytics: false, marketing: false, preferences: false }, window.location.pathname);
+};
+```
+
+Update buttons to use these handlers.
+
+> Set `VITE_API_URL` to your backend origin (e.g., `https://safetysync-ai-web.onrender.com`). If frontend and backend share the same origin, leave it empty.
+
+---
+
+## 12) Compliance notes & next steps
+
+* The audit trail captures: action, categories, session id, ip, UA, timestamp, and page.
+* If you support user login, pass a real `userId` from your auth context when available.
+* Update the Privacy Policy to list processors (Cloudflare, Render/Railway, Stripe, Brevo, GA if used) and data retention windows.
+
+---
+
+Need me to generate a migration file for your DB tool (Prisma/Knex/Drizzle) and a quick health-check endpoint to verify DB connectivity in Render?
