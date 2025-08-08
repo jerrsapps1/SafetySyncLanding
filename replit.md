@@ -42,6 +42,13 @@ Design preference: Tech-forward, modern design with sophisticated animations and
 - **Type Generation**: Automated TypeScript types from database schema using Drizzle Zod
 - **User Management**: Basic user table with username/password authentication structure
 
+### Privacy & Compliance System
+- **Cookie Consent Management**: Comprehensive `useConsent` hook with granular category controls (essential, analytics, marketing, preferences)
+- **Interactive Consent Banner**: Professional dark-themed modal with user-friendly controls and persistence via localStorage
+- **Legal Pages**: GDPR/CCPA compliant Privacy Policy and Terms of Service with proper legal frameworks
+- **Event-Driven Architecture**: Custom event system for reopening cookie settings from footer
+- **Security Headers**: Configured `_headers` file with DENY frame options, HSTS, and content type protection
+
 ### Development Workflow
 - **Development Server**: Integrated Express server with Vite middleware for unified development
 - **Code Quality**: TypeScript strict mode enabled across all modules

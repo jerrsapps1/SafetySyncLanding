@@ -1,0 +1,519 @@
+# SafetySync.ai – Cookie Consent + Privacy Policy & Terms
+
+Below are **copy‑paste‑ready** files/snippets for your Vite/React + Tailwind project. They include:
+
+* A full **cookie consent system** (banner + preferences modal) with categories (Essential, Analytics, Marketing, Preferences)
+* A reusable **`useConsent` hook** (localStorage + document.cookie helpers)
+* Boilerplate **Privacy Policy** and **Terms of Service** pages (customize before publishing)
+* Footer link to open the cookie settings any time
+* Optional Google Analytics loader that only runs if **Analytics** was allowed
+
+> Folder assumptions: `src/components`, `src/hooks`, `src/pages`, `src/lib`. Adjust imports as needed.
+
+---
+
+## 1) `src/hooks/useConsent.ts`
+
+```ts
+// src/hooks/useConsent.ts
+// Lightweight consent manager using localStorage + cookies
+// Categories: essential (always on), analytics, marketing, preferences
+
+import { useEffect, useState } from 'react';
+
+export type ConsentCategories = {
+  essential: true;       // always true
+  analytics: boolean;
+  marketing: boolean;
+  preferences: boolean;
+};
+
+const STORAGE_KEY = 'ssai.consent.v1';
+
+const DEFAULT_CONSENT: ConsentCategories = {
+  essential: true,
+  analytics: false,
+  marketing: false,
+  preferences: false,
+};
+
+function setCookie(name: string, value: string, days = 180) {
+  const d = new Date();
+  d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+}
+
+export function getCookie(name: string) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+export function useConsent() {
+  const [consent, setConsent] = useState<ConsentCategories>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? { ...DEFAULT_CONSENT, ...JSON.parse(raw) } : DEFAULT_CONSENT;
+    } catch {
+      return DEFAULT_CONSENT;
+    }
+  });
+
+  const [isSet, setIsSet] = useState<boolean>(() => !!localStorage.getItem(STORAGE_KEY));
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(consent));
+      // Write a simple cookie with the consent flags for server/edge use if needed
+      setCookie('ssai_consent', encodeURIComponent(JSON.stringify(consent)));
+    } catch {}
+  }, [consent]);
+
+  const acceptAll = () => {
+    const all = { essential: true, analytics: true, marketing: true, preferences: true };
+    setConsent(all);
+    setIsSet(true);
+  };
+
+  const rejectAll = () => {
+    const none = { ...DEFAULT_CONSENT, analytics: false, marketing: false, preferences: false };
+    setConsent(none);
+    setIsSet(true);
+  };
+
+  const save = (next: Partial<ConsentCategories>) => {
+    const merged = { ...consent, ...next, essential: true };
+    setConsent(merged);
+    setIsSet(true);
+  };
+
+  return { consent, isSet, setConsent: save, acceptAll, rejectAll };
+}
+```
+
+---
+
+## 2) `src/components/CookieConsent.tsx`
+
+```tsx
+// src/components/CookieConsent.tsx
+import React, { useState } from 'react';
+import { useConsent } from '@/hooks/useConsent';
+
+export default function CookieConsent() {
+  const { consent, isSet, acceptAll, rejectAll, setConsent } = useConsent();
+  const [open, setOpen] = useState(false);
+
+  if (isSet && !open) return null; // hide banner after decision unless settings modal opened
+
+  const onSave = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    // state already synced via setConsent on inputs
+    setOpen(false);
+  };
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-50">
+      {/* Backdrop when modal open via footer link */}
+      {open && (
+        <div className="fixed inset-0 bg-black/40" onClick={() => setOpen(false)} />
+      )}
+
+      {/* Banner / Modal container */}
+      <div className={`mx-auto max-w-2xl rounded-t-2xl md:rounded-2xl shadow-xl border border-gray-200 bg-white m-4 ${open ? 'md:fixed md:inset-0 md:max-w-xl md:m-auto' : ''}`}>
+        <div className="p-5">
+          <h2 className="text-lg font-semibold">Cookies & Privacy</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            We use cookies to make SafetySync.ai work and to improve your experience. You can control optional categories.
+          </p>
+
+          {/* Preferences */}
+          <form onSubmit={onSave} className="mt-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <input type="checkbox" checked readOnly className="mt-1 h-4 w-4 rounded border-gray-300" />
+              <div>
+                <div className="font-medium">Essential</div>
+                <div className="text-sm text-gray-600">Required for basic site functionality. Always on.</div>
+              </div>
+            </div>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-gray-300"
+                checked={consent.analytics}
+                onChange={(e) => setConsent({ analytics: e.target.checked })}
+              />
+              <div>
+                <div className="font-medium">Analytics</div>
+                <div className="text-sm text-gray-600">Helps us understand usage to improve the product.</div>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-gray-300"
+                checked={consent.marketing}
+                onChange={(e) => setConsent({ marketing: e.target.checked })}
+              />
+              <div>
+                <div className="font-medium">Marketing</div>
+                <div className="text-sm text-gray-600">Used to personalize offers and measure campaigns.</div>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-gray-300"
+                checked={consent.preferences}
+                onChange={(e) => setConsent({ preferences: e.target.checked })}
+              />
+              <div>
+                <div className="font-medium">Preferences</div>
+                <div className="text-sm text-gray-600">Remembers your settings, like language or region.</div>
+              </div>
+            </label>
+
+            <div className="mt-4 flex flex-col-reverse sm:flex-row gap-3">
+              <button type="button" onClick={rejectAll} className="px-4 py-2 rounded-lg border text-sm">Reject non‑essential</button>
+              <button type="submit" className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm">Save choices</button>
+              <button type="button" onClick={acceptAll} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm">Accept all</button>
+            </div>
+
+            <div className="mt-3 text-xs text-gray-500">
+              Read our <a className="underline" href="/privacy">Privacy Policy</a> and <a className="underline" href="/terms">Terms</a>.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+**Usage** (e.g., in `App.tsx` just before closing `</body>` in your layout or near the root component):
+
+```tsx
+// In your root layout or App.tsx
+import CookieConsent from '@/components/CookieConsent';
+
+export default function App() {
+  return (
+    <>
+      {/* ... your routes/components ... */}
+      <CookieConsent />
+    </>
+  );
+}
+```
+
+---
+
+## 3) Footer "Cookies" link to reopen settings
+
+Add a button that toggles the consent modal again (we’ll expose it by setting the banner to open when `isSet===true` and user clicks link). The simplest way is to render the component all the time and control `open` with a global event.
+
+Add this tiny event utility:
+
+```ts
+// src/lib/events.ts
+export const fire = (name: string, detail?: any) => document.dispatchEvent(new CustomEvent(name, { detail }));
+export const on = (name: string, cb: (e: CustomEvent) => void) => {
+  const handler = cb as EventListener;
+  document.addEventListener(name, handler);
+  return () => document.removeEventListener(name, handler);
+};
+```
+
+Patch `CookieConsent` to listen for an event to open from anywhere (paste below imports):
+
+```tsx
+// inside CookieConsent.tsx
+import { on } from '@/lib/events';
+
+// after useState definitions
+React.useEffect(() => {
+  return on('open-cookie-settings', () => setOpen(true));
+}, []);
+```
+
+Footer link (anywhere in your UI):
+
+```tsx
+// e.g., src/components/Footer.tsx
+import React from 'react';
+import { fire } from '@/lib/events';
+
+export default function Footer() {
+  return (
+    <footer className="mt-20 border-t py-6 text-sm text-gray-600">
+      <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3">
+        <div>© {new Date().getFullYear()} SafetySync.ai</div>
+        <nav className="flex items-center gap-4">
+          <button onClick={() => fire('open-cookie-settings')} className="underline">Cookies</button>
+          <a className="underline" href="/privacy">Privacy</a>
+          <a className="underline" href="/terms">Terms</a>
+        </nav>
+      </div>
+    </footer>
+  );
+}
+```
+
+---
+
+## 4) Optional: Load Google Analytics **only if consent given**
+
+```tsx
+// src/components/Analytics.tsx
+import React from 'react';
+import { useConsent } from '@/hooks/useConsent';
+
+const GA_ID = import.meta.env.VITE_GA_ID; // set in .env
+
+export default function Analytics() {
+  const { consent } = useConsent();
+
+  if (!consent.analytics || !GA_ID) return null;
+
+  return (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}', { anonymize_ip: true });
+          `,
+        }}
+      />
+    </>
+  );
+}
+```
+
+Usage (near root):
+
+```tsx
+import Analytics from '@/components/Analytics';
+
+export default function App() {
+  return (
+    <>
+      {/* routes */}
+      <Analytics />
+      <CookieConsent />
+    </>
+  );
+}
+```
+
+---
+
+## 5) `public/_redirects` and `public/_headers`
+
+```txt
+# public/_redirects
+/*  /index.html  200
+```
+
+```txt
+# public/_headers
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+```
+
+---
+
+## 6) `src/pages/PrivacyPolicy.tsx`
+
+> **Disclaimer:** This is a starting template and not legal advice. Customize for your data flows (e.g., analytics tools, processors, payment vendors, retention periods, GDPR/CCPA rights handling, contact email, DPO if applicable).
+
+```tsx
+// src/pages/PrivacyPolicy.tsx
+import React from 'react';
+
+export default function PrivacyPolicy() {
+  return (
+    <main className="max-w-3xl mx-auto px-4 py-10 prose prose-gray">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: {new Date().toLocaleDateString()}</p>
+
+      <p>
+        SafetySync.ai ("we", "us") provides software that helps businesses manage safety training
+        recordkeeping and compliance. This Privacy Policy explains how we collect, use, and share
+        information when you use our website and services.
+      </p>
+
+      <h2>Information We Collect</h2>
+      <ul>
+        <li><strong>Account & Contact Data:</strong> name, email, company, role.</li>
+        <li><strong>Usage Data:</strong> pages viewed, actions taken, device/browser info, IP address.</li>
+        <li><strong>Customer Content:</strong> training records and documents you upload to the platform.</li>
+        <li><strong>Cookies & Similar:</strong> essential, analytics, marketing, and preference cookies as chosen in your settings.</li>
+      </ul>
+
+      <h2>How We Use Information</h2>
+      <ul>
+        <li>Provide and secure the services, including authentication and fraud prevention.</li>
+        <li>Operate features such as certification tracking and document storage.</li>
+        <li>Analyze usage (in aggregate) to improve performance and usability.</li>
+        <li>Communicate with you about updates, security notices, and support.</li>
+        <li>Comply with legal obligations.</li>
+      </ul>
+
+      <h2>Legal Bases (EEA/UK users)</h2>
+      <ul>
+        <li>Contract (to provide the services you request)</li>
+        <li>Legitimate interests (e.g., service improvement, security)</li>
+        <li>Consent (for non‑essential cookies/marketing)</li>
+        <li>Legal obligation (where applicable)</li>
+      </ul>
+
+      <h2>Sharing</h2>
+      <p>We may share personal data with service providers who process data on our behalf (e.g., cloud hosting, analytics, support). We require appropriate confidentiality and security commitments. We do not sell personal data.</p>
+
+      <h2>Retention</h2>
+      <p>We retain data for as long as necessary to provide the services, comply with legal obligations, resolve disputes, and enforce agreements. You may request deletion subject to applicable law and contractual obligations.</p>
+
+      <h2>Your Choices</h2>
+      <ul>
+        <li>Cookie settings: manage optional cookies via the Cookies link in the footer.</li>
+        <li>Marketing: opt out using unsubscribe links or by contacting us.</li>
+        <li>Access/Deletion/Correction: contact us to exercise rights under applicable laws (e.g., GDPR/CCPA).</li>
+      </ul>
+
+      <h2>Security</h2>
+      <p>We implement technical and organizational measures to protect information. No system is 100% secure.</p>
+
+      <h2>International Transfers</h2>
+      <p>We may transfer personal data to countries with different data protection laws. Where required, we use appropriate safeguards.</p>
+
+      <h2>Children</h2>
+      <p>Our services are not directed to children under 16. We do not knowingly collect personal data from children.</p>
+
+      <h2>Contact Us</h2>
+      <p>For questions or privacy requests, contact: privacy@safetysync.ai</p>
+
+      <h2>Changes</h2>
+      <p>We may update this policy. Material changes will be posted on this page with a new “Last updated” date.</p>
+    </main>
+  );
+}
+```
+
+---
+
+## 7) `src/pages/TermsOfService.tsx`
+
+> **Disclaimer:** Template only; review with counsel. Update business name, governing law, fees, acceptable use, service levels, data processing, termination, and dispute resolution to match your operation.
+
+```tsx
+// src/pages/TermsOfService.tsx
+import React from 'react';
+
+export default function TermsOfService() {
+  return (
+    <main className="max-w-3xl mx-auto px-4 py-10 prose prose-gray">
+      <h1>Terms of Service</h1>
+      <p>Last updated: {new Date().toLocaleDateString()}</p>
+
+      <h2>1. Agreement</h2>
+      <p>These Terms govern your use of SafetySync.ai. By accessing or using the services, you agree to these Terms.</p>
+
+      <h2>2. Accounts & Access</h2>
+      <p>You must provide accurate information and maintain the security of your account credentials. You are responsible for activities under your account.</p>
+
+      <h2>3. Acceptable Use</h2>
+      <ul>
+        <li>No illegal, harmful, or infringing content or activity.</li>
+        <li>No attempts to disrupt or reverse engineer the service.</li>
+        <li>Compliance with all applicable laws and regulations (including OSHA and data protection laws as relevant).</li>
+      </ul>
+
+      <h2>4. Customer Content</h2>
+      <p>You retain ownership of content you upload. You grant us a limited license to host and process content to provide the services. You represent you have rights to the content you upload.</p>
+
+      <h2>5. Privacy</h2>
+      <p>Your use is subject to our <a href="/privacy">Privacy Policy</a>, which explains how we handle personal data.</p>
+
+      <h2>6. Fees</h2>
+      <p>Paid plans, invoices, taxes, and payment terms (e.g., Net 30, POs) are described at purchase. Fees are non‑refundable except as required by law or expressly stated.</p>
+
+      <h2>7. Service Availability & Support</h2>
+      <p>We aim for high availability but do not guarantee uninterrupted service. Support channels and response targets may be defined in your plan or support policy.</p>
+
+      <h2>8. Intellectual Property</h2>
+      <p>We retain all rights in the services and underlying technology. No license is granted except as expressly set forth.</p>
+
+      <h2>9. Disclaimers</h2>
+      <p>Services are provided “as is” without warranties of any kind, to the maximum extent permitted by law.</p>
+
+      <h2>10. Limitation of Liability</h2>
+      <p>To the maximum extent permitted by law, our aggregate liability arising out of or related to the services shall not exceed the amounts paid by you in the 12 months prior to the claim.</p>
+
+      <h2>11. Indemnification</h2>
+      <p>You agree to indemnify and hold us harmless from claims arising from your use or violation of these Terms.</p>
+
+      <h2>12. Suspension & Termination</h2>
+      <p>We may suspend or terminate access for violations or risks to the service. You may terminate per your plan terms; certain sections survive termination.</p>
+
+      <h2>13. Governing Law & Disputes</h2>
+      <p>Specify governing law and venue (e.g., State of Texas, USA). Dispute resolution process (e.g., arbitration) may apply.</p>
+
+      <h2>14. Changes to Terms</h2>
+      <p>We may update these Terms. Continued use after changes constitutes acceptance.</p>
+
+      <h2>15. Contact</h2>
+      <p>Questions? terms@safetysync.ai</p>
+    </main>
+  );
+}
+```
+
+---
+
+## 8) Router wiring (React Router example)
+
+```tsx
+// src/main.tsx (or wherever your router lives)
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import App from './App';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import TermsOfService from '@/pages/TermsOfService';
+
+const router = createBrowserRouter([
+  { path: '/', element: <App /> },
+  { path: '/privacy', element: <PrivacyPolicy /> },
+  { path: '/terms', element: <TermsOfService /> },
+]);
+
+export default function Root() {
+  return <RouterProvider router={router} />;
+}
+```
+
+---
+
+## 9) Notes for compliance
+
+* Keep a **record of consent** (already stored in `localStorage` + cookie). If you need server logs, POST the consent object to your API when saved.
+* Provide a persistent **Cookies** link (footer) to reopen settings any time.
+* If you use third‑party scripts (chat widgets, marketing tags), **gate them** behind the corresponding consent flag.
+* Update the Privacy Policy with your exact vendors (e.g., Stripe, Brevo, Render, Vercel/Railway, Cloudflare) and data retention periods.
+
+---
+
+**Next step:** Tell me your router setup (React Router vs file‑based), and I’ll tailor the imports/wiring. If you want, I can also add a server endpoint to store a consent audit trail in PostgreSQL.

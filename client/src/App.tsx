@@ -7,7 +7,7 @@ import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
-import Cookies from "@/pages/cookies";
+import CookieConsent from "@/components/CookieConsent";
 
 function Router() {
   return (
@@ -15,7 +15,6 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
-      <Route path="/cookies" component={Cookies} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -27,6 +26,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <CookieConsent />
       </TooltipProvider>
     </QueryClientProvider>
   );
