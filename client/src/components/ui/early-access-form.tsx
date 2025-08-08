@@ -106,10 +106,10 @@ export default function EarlyAccessForm({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-50 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-800"
+          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-50 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-800"
           data-testid="button-close-form"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
         
         <div className="mb-6">
