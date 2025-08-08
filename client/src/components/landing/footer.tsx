@@ -1,4 +1,5 @@
 import { Twitter, Linkedin } from "lucide-react";
+import { Link } from "wouter";
 import Logo from "@/components/ui/logo";
 
 export default function Footer() {
@@ -63,9 +64,9 @@ export default function Footer() {
             © {currentYear} SafetySync.ai — All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0 text-sm text-gray-400">
-            <a href="#" className="hover:text-white transition-colors" data-testid="link-privacy">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors" data-testid="link-terms">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors" data-testid="link-cookies">Cookies</a>
+            <Link href="/privacy-policy" className="hover:text-white transition-colors" data-testid="link-privacy">Privacy Policy</Link>
+            <Link href="/terms-of-service" className="hover:text-white transition-colors" data-testid="link-terms">Terms of Service</Link>
+            <Link href="/cookies" className="hover:text-white transition-colors" data-testid="link-cookies">Cookies</Link>
           </div>
         </div>
       </div>
