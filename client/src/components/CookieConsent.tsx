@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useConsent } from '@/hooks/useConsent';
 import { on } from '@/lib/events';
+import { postConsent } from '@/lib/consent-api';
 
 export default function CookieConsent() {
   const { consent, isSet, acceptAll, rejectAll, setConsent } = useConsent();
@@ -14,9 +15,10 @@ export default function CookieConsent() {
 
   if (isSet && !open) return null; // hide banner after decision unless settings modal opened
 
-  const onSave = (e?: React.FormEvent) => {
+  const onSave = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    // state already synced via setConsent on inputs
+    // Log consent decision to backend
+    await postConsent('save', consent, window.location.pathname);
     setOpen(false);
   };
 
@@ -85,9 +87,37 @@ export default function CookieConsent() {
             </label>
 
             <div className="mt-4 flex flex-col-reverse sm:flex-row gap-3">
-              <button type="button" onClick={rejectAll} className="px-4 py-2 rounded-lg border border-gray-600 text-white text-sm hover:bg-gray-800 transition-colors">Reject non‑essential</button>
-              <button type="submit" className="px-4 py-2 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600 transition-colors">Save choices</button>
-              <button type="button" onClick={acceptAll} className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm transition-all duration-300">Accept all</button>
+              <button 
+                type="button" 
+                onClick={async () => {
+                  rejectAll();
+                  await postConsent('reject_all', { essential: true, analytics: false, marketing: false, preferences: false }, window.location.pathname);
+                  setOpen(false);
+                }} 
+                className="px-4 py-2 rounded-lg border border-gray-600 text-white text-sm hover:bg-gray-800 transition-colors"
+                data-testid="button-reject-nonessential"
+              >
+                Reject non‑essential
+              </button>
+              <button 
+                type="submit" 
+                className="px-4 py-2 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600 transition-colors"
+                data-testid="button-save-choices"
+              >
+                Save choices
+              </button>
+              <button 
+                type="button" 
+                onClick={async () => {
+                  acceptAll();
+                  await postConsent('accept_all', { essential: true, analytics: true, marketing: true, preferences: true }, window.location.pathname);
+                  setOpen(false);
+                }} 
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm transition-all duration-300"
+                data-testid="button-accept-all"
+              >
+                Accept all
+              </button>
             </div>
 
             <div className="mt-3 text-xs text-gray-500">

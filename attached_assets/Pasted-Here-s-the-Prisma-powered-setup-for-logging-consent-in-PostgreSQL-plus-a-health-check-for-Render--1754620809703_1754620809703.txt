@@ -1,0 +1,341 @@
+Here’s the Prisma-powered setup for logging consent in PostgreSQL, plus a health check for Render.
+
+---
+
+## 1) Install Prisma
+
+```bash
+npm i @prisma/client
+npm i -D prisma
+npx prisma init
+```
+
+This creates `prisma/schema.prisma` and `.env`.
+
+---
+
+## 2) `.env` settings
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DBNAME?schema=public"
+ALLOWED_ORIGIN=https://safetysync.ai
+```
+
+---
+
+## 3) `prisma/schema.prisma`
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ConsentEvent {
+  id          String   @id @default(uuid())
+  sessionId   String?
+  userId      String?
+  action      String
+  categories  Json
+  page        String?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([sessionId])
+}
+```
+
+---
+
+## 4) Run migration
+
+```bash
+npx prisma migrate dev --name init_consent
+```
+
+Deploy migration to production:
+
+```bash
+npx prisma migrate deploy
+```
+
+---
+
+## 5) Update backend (`server/index.ts`)
+
+```ts
+import express from 'express';
+import cors from 'cors';
+import { PrismaClient } from '@prisma/client';
+
+const app = express();
+app.use(express.json());
+
+const allowed = process.env.ALLOWED_ORIGIN || 'https://safetysync.ai';
+app.use(cors({ origin: allowed, credentials: true }));
+
+const prisma = new PrismaClient();
+
+app.get('/api/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok' });
+  } catch (e) {
+    res.status(500).json({ status: 'error', error: e });
+  }
+});
+
+app.post('/api/consent', async (req, res) => {
+  try {
+    const { categories, action, sessionId, userId, page } = req.body || {};
+    if (!categories || !action) return res.status(400).json({ error: 'Missing categories or action' });
+
+    const ip = (req.headers['cf-connecting-ip'] as string) || req.ip;
+    const userAgent = req.headers['user-agent'] as string;
+
+    await prisma.consentEvent.create({
+      data: {
+        sessionId: sessionId || null,
+        userId: userId || null,
+        action,
+        categories,
+        page: page || null,
+        ip: ip || null,
+        userAgent: userAgent || null,
+      },
+    });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Consent insert failed', e);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+```
+
+---
+
+## 6) Frontend integration
+
+In your `CookieConsent` component handlers:
+
+```ts
+import { postConsent } from '@/lib/consent-api';
+
+const onSave = (e?: React.FormEvent) => {
+  e?.preventDefault();
+  postConsent('save', consent, window.location.pathname);
+  setOpen(false);
+};
+
+const onAcceptAll = () => {
+  acceptAll();
+  postConsent('accept_all', { ...consent, analytics: true, marketing: true, preferences: true }, window.location.pathname);
+};
+
+const onRejectAll = () => {
+  rejectAll();
+  postConsent('reject_all', { ...consent, analytics: false, marketing: false, preferences: false }, window.location.pathname);
+};
+```
+
+---
+
+## 7) Verify
+
+1. Deploy backend with updated code.
+2. Run `npx prisma migrate deploy` on production DB.
+3. Visit `https://your-backend/api/health` → should return `{ status: 'ok' }`.
+4. Use the cookie banner, check DB table `ConsentEvent` for new rows.
+
+---
+
+Do you want me to now add a **secure admin endpoint** to view/download consent logs in CSV from your admin dashboard?
+
+---
+
+## 13) Prisma setup for Consent Audit (Recommended)
+
+**Goal:** Add Prisma to your Node/Express backend for migrations + typed DB access.
+
+### a) Install & init
+
+```bash
+# in your backend folder
+npm i -D prisma
+npm i @prisma/client
+npx prisma init --datasource-provider postgresql
+```
+
+This creates `prisma/schema.prisma` and adds `DATABASE_URL` to `.env`.
+
+### b) `DATABASE_URL` (.env)
+
+```
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DBNAME?schema=public"
+```
+
+### c) Prisma schema (`prisma/schema.prisma`)
+
+> If you already have models, **append** this model; don’t overwrite. Ensure `provider = "postgresql"`.
+
+```prisma
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ConsentEvent {
+  id          String   @id @default(uuid())
+  sessionId   String?
+  userId      String?
+  action      String   // 'accept_all' | 'reject_all' | 'save'
+  categories  Json
+  page        String?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([createdAt])
+  @@index([sessionId])
+}
+```
+
+### d) Create and run migration
+
+```bash
+npx prisma migrate dev --name init_consent
+# In CI/production: npx prisma migrate deploy
+```
+
+### e) Generate client
+
+```bash
+npx prisma generate
+```
+
+---
+
+## 14) Update Express to use Prisma Client
+
+Replace the raw `pg` insert with Prisma and add two helper routes.
+
+```ts
+// server/db/prisma.ts
+import { PrismaClient } from '@prisma/client';
+export const prisma = new PrismaClient();
+```
+
+```ts
+// server/index.ts (or your main server file)
+import express from 'express';
+import cors from 'cors';
+import { prisma } from './db/prisma';
+
+const app = express();
+app.use(express.json());
+
+const allowed = process.env.ALLOWED_ORIGIN || 'https://safetysync.ai';
+app.use(cors({ origin: allowed, credentials: true }));
+
+// Health check for Render/Railway
+app.get('/api/health', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'db_unreachable' });
+  }
+});
+
+// Consent endpoint (create)
+app.post('/api/consent', async (req, res) => {
+  try {
+    const { categories, action, sessionId, userId, page } = req.body || {};
+    if (!categories || !action) return res.status(400).json({ error: 'Missing categories or action' });
+
+    const ip = (req.headers['cf-connecting-ip'] as string) || (req.ip as string) || undefined;
+    const userAgent = (req.headers['user-agent'] as string) || undefined;
+
+    await prisma.consentEvent.create({
+      data: {
+        sessionId: sessionId || null,
+        userId: userId || null,
+        action,
+        categories,
+        page: page || null,
+        ip,
+        userAgent,
+      },
+    });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('consent insert failed', e);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+// (Optional) quick viewer for recent events (protect later)
+app.get('/api/consent/recent', async (_req, res) => {
+  const rows = await prisma.consentEvent.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+  res.json(rows);
+});
+
+// export app / start server as you already do
+export default app;
+```
+
+> If your project uses ESM paths or different folders, adjust imports accordingly.
+
+---
+
+## 15) Frontend: keep the same `postConsent` util
+
+No change needed—your `postConsent` will hit `/api/consent` the same way. Just ensure `VITE_API_URL` points to your backend if it’s a different origin.
+
+```env
+# frontend .env
+VITE_API_URL=https://YOUR-BACKEND-URL
+```
+
+---
+
+## 16) Deployment steps checklist
+
+1. **Backend**
+
+   * Set `DATABASE_URL` & `ALLOWED_ORIGIN` env vars on Render/Railway.
+   * Run `npx prisma migrate deploy` on deploy.
+   * Ensure a health check pings `/api/health`.
+2. **Frontend**
+
+   * Set `VITE_API_URL` if backend is separate.
+   * Redeploy Cloudflare Pages (commit any change).
+3. **Verify**
+
+   * Open site → Accept/Reject/Save on banner.
+   * Hit `GET /api/consent/recent` to confirm rows.
+   * Check `/_headers` and Cloudflare Cache Rules are in place for performance.
+
+---
+
+## 17) Optional enhancements
+
+* Add a **retention job** (cron or scheduled function) to delete consent events older than N months.
+* Record **country/region** from a GeoIP header if needed for regional reporting.
+* Add **admin auth** and filter endpoints to export consent logs (CSV) for audits.
