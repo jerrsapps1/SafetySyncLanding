@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "./db";
 import { earlyAccessSignups, insertEarlyAccessSchema, consentEvents, insertConsentSchema } from "@shared/schema";
 import { sendEmail, generateEarlyAccessEmail } from "./email";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
+import { requireAdminKey } from "./middleware/adminKey";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Early Access Signup endpoint
@@ -156,18 +157,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get recent consent events (for admin use)
-  app.get("/api/consent/recent", async (req, res) => {
+  app.get("/api/consent/recent", requireAdminKey, async (req, res) => {
     try {
+      const limit = parseInt(req.query.limit as string) || 50;
       const events = await db
         .select()
         .from(consentEvents)
-        .orderBy(sql`${consentEvents.createdAt} DESC`)
-        .limit(50);
+        .orderBy(desc(consentEvents.createdAt))
+        .limit(Math.min(limit, 1000)); // Cap at 1000 for performance
       
       res.json(events);
     } catch (error) {
       console.error('Failed to fetch consent events:', error);
       res.status(500).json({ error: "Failed to fetch consent events" });
+    }
+  });
+
+  // Export consent events as CSV (for admin use)
+  app.get("/api/consent/export.csv", requireAdminKey, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10000;
+      const events = await db
+        .select()
+        .from(consentEvents)
+        .orderBy(desc(consentEvents.createdAt))
+        .limit(Math.min(limit, 50000)); // Cap at 50k for performance
+      
+      // Generate CSV content
+      const csvHeader = 'ID,Session ID,User ID,Action,Categories,Page,IP,User Agent,Created At\n';
+      const csvRows = events.map(event => {
+        const categories = JSON.stringify(event.categories).replace(/"/g, '""'); // Escape quotes
+        return [
+          event.id,
+          event.sessionId || '',
+          event.userId || '',
+          event.action,
+          `"${categories}"`, // Wrap JSON in quotes
+          event.page || '',
+          event.ip || '',
+          `"${(event.userAgent || '').replace(/"/g, '""')}"`, // Escape and wrap user agent
+          event.createdAt?.toISOString() || ''
+        ].join(',');
+      }).join('\n');
+      
+      const csvContent = csvHeader + csvRows;
+      const filename = `consent-events-${new Date().toISOString().split('T')[0]}.csv`;
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error('Failed to export consent events:', error);
+      res.status(500).json({ error: "Failed to export consent events" });
+    }
+  });
+
+  // Get consent statistics (for admin dashboard)
+  app.get("/api/consent/stats", requireAdminKey, async (req, res) => {
+    try {
+      const stats = await db
+        .select({
+          action: consentEvents.action,
+          count: sql<number>`count(*)`
+        })
+        .from(consentEvents)
+        .groupBy(consentEvents.action);
+      
+      const totalEvents = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(consentEvents);
+      
+      res.json({
+        total: totalEvents[0]?.count || 0,
+        byAction: stats.reduce((acc, stat) => {
+          acc[stat.action] = Number(stat.count);
+          return acc;
+        }, {} as Record<string, number>)
+      });
+    } catch (error) {
+      console.error('Failed to fetch consent statistics:', error);
+      res.status(500).json({ error: "Failed to fetch consent statistics" });
     }
   });
 

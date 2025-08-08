@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "SafetySync.ai Cookie Consent API",
+    "description": "API collection for testing SafetySync.ai cookie consent and admin endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/health",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "health"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Post Consent - Accept All",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"accept_all\",\n  \"categories\": {\n    \"essential\": true,\n    \"analytics\": true,\n    \"marketing\": true,\n    \"preferences\": true\n  },\n  \"page\": \"/\",\n  \"sessionId\": \"test-session-accept-all\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/consent",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "consent"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Post Consent - Reject All",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"reject_all\",\n  \"categories\": {\n    \"essential\": true,\n    \"analytics\": false,\n    \"marketing\": false,\n    \"preferences\": false\n  },\n  \"page\": \"/privacy-policy\",\n  \"sessionId\": \"test-session-reject-all\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/consent",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "consent"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Post Consent - Custom Save",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"save\",\n  \"categories\": {\n    \"essential\": true,\n    \"analytics\": true,\n    \"marketing\": false,\n    \"preferences\": true\n  },\n  \"page\": \"/terms-of-service\",\n  \"sessionId\": \"test-session-custom-save\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/consent",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "consent"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Recent Consents (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{ADMIN_API_KEY}}"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/consent/recent?limit=25",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "consent", "recent"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "25"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Consent Statistics (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{ADMIN_API_KEY}}"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/consent/stats",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "consent", "stats"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Export Consent CSV (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{ADMIN_API_KEY}}"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/consent/export.csv?limit=1000",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "consent", "export.csv"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "1000"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:5000",
+      "description": "Base URL for SafetySync.ai API (change to production URL when deployed)"
+    },
+    {
+      "key": "ADMIN_API_KEY",
+      "value": "your-admin-key-here",
+      "description": "Admin API key for accessing protected endpoints"
+    }
+  ]
+}
