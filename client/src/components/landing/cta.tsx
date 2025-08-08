@@ -32,7 +32,7 @@ export default function CTA() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button 
             onClick={() => setShowDemoForm(true)}
-            className="inline-flex items-center justify-center bg-white text-blue-600 font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-white/25 hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 group relative overflow-hidden"
+            className="inline-flex items-center justify-center bg-white text-blue-600 font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-white/25 hover:bg-gray-50 transition-all duration-300 group relative overflow-hidden"
             data-testid="button-request-demo-cta"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

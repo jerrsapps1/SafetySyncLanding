@@ -34,7 +34,7 @@ export default function Hero() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button 
             onClick={() => setShowEarlyAccessForm(true)}
-            className="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/25 transform hover:-translate-y-1 relative overflow-hidden group"
+            className="inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/25 relative overflow-hidden group"
             data-testid="button-early-access"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

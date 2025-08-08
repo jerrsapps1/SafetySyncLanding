@@ -19,28 +19,29 @@ export default function Navigation() {
         </a>
         
         <div className="hidden md:flex items-center space-x-8">
-          <a 
-            href="#features" 
+          <button 
+            onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
             className="text-gray-300 hover:text-white transition-colors"
             data-testid="link-features"
           >
             Features
-          </a>
-          <a 
-            href="#" 
+          </button>
+          <button 
+            onClick={() => alert('Pricing page coming soon!')}
             className="text-gray-300 hover:text-white transition-colors"
             data-testid="link-pricing"
           >
             Pricing
-          </a>
-          <a 
-            href="#" 
+          </button>
+          <button 
+            onClick={() => alert('About page coming soon!')}
             className="text-gray-300 hover:text-white transition-colors"
             data-testid="link-about"
           >
             About
-          </a>
+          </button>
           <Button 
+            onClick={() => alert('Sign in functionality coming soon!')}
             className="text-gray-300 hover:bg-transparent hover:text-gray-200 transition-colors bg-transparent border-none"
             data-testid="button-signin"
           >
@@ -55,7 +56,13 @@ export default function Navigation() {
           </Button>
         </div>
         
-        <Button variant="ghost" size="icon" className="md:hidden text-white" data-testid="button-mobile-menu">
+        <Button 
+          onClick={() => alert('Mobile menu coming soon!')}
+          variant="ghost" 
+          size="icon" 
+          className="md:hidden text-white" 
+          data-testid="button-mobile-menu"
+        >
           <Menu className="w-6 h-6" />
         </Button>
       </div>
