@@ -105,8 +105,11 @@ export default function EarlyAccessForm({
       <div className="relative bg-gray-900 border border-white/20 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
         <button
           type="button"
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-50 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-800"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-50 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-800 cursor-pointer"
           data-testid="button-close-form"
         >
           <X className="w-4 h-4" />
