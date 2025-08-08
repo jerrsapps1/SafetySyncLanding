@@ -100,8 +100,8 @@ export default function EarlyAccessForm({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 bg-black">
-      <div className="absolute inset-0 bg-gray-950"></div>
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/80 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gray-950/60"></div>
       <div className="relative bg-gray-900 border border-white/20 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
         <button
           type="button"
@@ -109,7 +109,7 @@ export default function EarlyAccessForm({
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-50 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-800 cursor-pointer"
+          className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors z-50 w-6 h-6 flex items-center justify-center rounded hover:bg-gray-800 cursor-pointer"
           data-testid="button-close-form"
         >
           <X className="w-4 h-4" />
