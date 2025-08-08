@@ -1,0 +1,703 @@
+# SafetySync.ai — Copy‑Paste Package for Replit (Frontend + Backend)
+
+Follow the file paths exactly. Paste these into your repo, install deps, set env vars, and deploy. You can import the Postman collection at the end to test the API.
+
+> Assumptions: Vite + React + TypeScript frontend, Node/Express + TypeScript backend, PostgreSQL, Prisma ORM. Frontend on Cloudflare Pages, backend on Render/Railway.
+
+---
+
+## FRONTEND
+
+### `frontend/public/_redirects`
+
+```
+/*  /index.html  200
+```
+
+### `frontend/public/_headers`
+
+```
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+```
+
+### `frontend/src/hooks/useConsent.ts`
+
+```ts
+import { useEffect, useState } from 'react';
+
+export type ConsentCategories = {
+  essential: true;
+  analytics: boolean;
+  marketing: boolean;
+  preferences: boolean;
+};
+
+const STORAGE_KEY = 'ssai.consent.v1';
+
+const DEFAULT_CONSENT: ConsentCategories = {
+  essential: true,
+  analytics: false,
+  marketing: false,
+  preferences: false,
+};
+
+function setCookie(name: string, value: string, days = 180) {
+  const d = new Date();
+  d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+}
+
+export function getCookie(name: string) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+export function useConsent() {
+  const [consent, setConsent] = useState<ConsentCategories>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? { ...DEFAULT_CONSENT, ...JSON.parse(raw) } : DEFAULT_CONSENT;
+    } catch {
+      return DEFAULT_CONSENT;
+    }
+  });
+
+  const [isSet, setIsSet] = useState<boolean>(() => !!localStorage.getItem(STORAGE_KEY));
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(consent));
+      setCookie('ssai_consent', encodeURIComponent(JSON.stringify(consent)));
+    } catch {}
+  }, [consent]);
+
+  const acceptAll = () => {
+    const all = { essential: true, analytics: true, marketing: true, preferences: true };
+    setConsent(all);
+    setIsSet(true);
+  };
+
+  const rejectAll = () => {
+    const none = { ...DEFAULT_CONSENT, analytics: false, marketing: false, preferences: false };
+    setConsent(none);
+    setIsSet(true);
+  };
+
+  const save = (next: Partial<ConsentCategories>) => {
+    const merged = { ...consent, ...next, essential: true };
+    setConsent(merged);
+    setIsSet(true);
+  };
+
+  return { consent, isSet, setConsent: save, acceptAll, rejectAll };
+}
+```
+
+### `frontend/src/lib/events.ts`
+
+```ts
+export const fire = (name: string, detail?: any) => document.dispatchEvent(new CustomEvent(name, { detail }));
+export const on = (name: string, cb: (e: CustomEvent) => void) => {
+  const handler = cb as unknown as EventListener;
+  document.addEventListener(name, handler);
+  return () => document.removeEventListener(name, handler);
+};
+```
+
+### `frontend/src/lib/consent-api.ts`
+
+```ts
+export async function postConsent(action: 'accept_all'|'reject_all'|'save', categories: any, page?: string) {
+  try {
+    await fetch(`${import.meta.env.VITE_API_URL || ''}/api/consent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action, categories, page, sessionId: getSessionId() }),
+    });
+  } catch {}
+}
+
+function getSessionId() {
+  const k = 'ssai.sid';
+  let v = localStorage.getItem(k);
+  if (!v) { v = Math.random().toString(36).slice(2); localStorage.setItem(k, v); }
+  return v;
+}
+```
+
+### `frontend/src/components/CookieConsent.tsx`
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import { useConsent } from '@/hooks/useConsent';
+import { on } from '@/lib/events';
+import { postConsent } from '@/lib/consent-api';
+
+export default function CookieConsent() {
+  const { consent, isSet, acceptAll, rejectAll, setConsent } = useConsent();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => on('open-cookie-settings', () => setOpen(true)), []);
+
+  if (isSet && !open) return null;
+
+  const onSave = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    postConsent('save', consent, window.location.pathname);
+    setOpen(false);
+  };
+
+  const onAcceptAll = () => {
+    acceptAll();
+    postConsent('accept_all', { ...consent, analytics: true, marketing: true, preferences: true }, window.location.pathname);
+  };
+
+  const onRejectAll = () => {
+    rejectAll();
+    postConsent('reject_all', { ...consent, analytics: false, marketing: false, preferences: false }, window.location.pathname);
+  };
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-50">
+      {open && <div className="fixed inset-0 bg-black/40" onClick={() => setOpen(false)} />}
+      <div className={`mx-auto max-w-2xl rounded-t-2xl md:rounded-2xl shadow-xl border border-gray-200 bg-white m-4 ${open ? 'md:fixed md:inset-0 md:max-w-xl md:m-auto' : ''}`}>
+        <div className="p-5">
+          <h2 className="text-lg font-semibold">Cookies & Privacy</h2>
+          <p className="mt-1 text-sm text-gray-600">We use cookies to make SafetySync.ai work and to improve your experience. You can control optional categories.</p>
+
+          <form onSubmit={onSave} className="mt-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <input type="checkbox" checked readOnly className="mt-1 h-4 w-4 rounded border-gray-300" />
+              <div>
+                <div className="font-medium">Essential</div>
+                <div className="text-sm text-gray-600">Required for basic site functionality. Always on.</div>
+              </div>
+            </div>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-gray-300" checked={consent.analytics} onChange={(e) => setConsent({ analytics: e.target.checked })} />
+              <div>
+                <div className="font-medium">Analytics</div>
+                <div className="text-sm text-gray-600">Helps us understand usage to improve the product.</div>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-gray-300" checked={consent.marketing} onChange={(e) => setConsent({ marketing: e.target.checked })} />
+              <div>
+                <div className="font-medium">Marketing</div>
+                <div className="text-sm text-gray-600">Used to personalize offers and measure campaigns.</div>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-gray-300" checked={consent.preferences} onChange={(e) => setConsent({ preferences: e.target.checked })} />
+              <div>
+                <div className="font-medium">Preferences</div>
+                <div className="text-sm text-gray-600">Remembers your settings, like language or region.</div>
+              </div>
+            </label>
+
+            <div className="mt-4 flex flex-col-reverse sm:flex-row gap-3">
+              <button type="button" onClick={onRejectAll} className="px-4 py-2 rounded-lg border text-sm">Reject non‑essential</button>
+              <button type="submit" className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm">Save choices</button>
+              <button type="button" onClick={onAcceptAll} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm">Accept all</button>
+            </div>
+
+            <div className="mt-3 text-xs text-gray-500">
+              Read our <a className="underline" href="/privacy">Privacy Policy</a> and <a className="underline" href="/terms">Terms</a>.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### `frontend/src/components/Analytics.tsx`
+
+```tsx
+import React from 'react';
+import { useConsent } from '@/hooks/useConsent';
+
+const GA_ID = import.meta.env.VITE_GA_ID;
+
+export default function Analytics() {
+  const { consent } = useConsent();
+  if (!consent.analytics || !GA_ID) return null;
+  return (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+      <script dangerouslySetInnerHTML={{ __html: `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);} 
+        gtag('js', new Date());
+        gtag('config', '${GA_ID}', { anonymize_ip: true });
+      ` }} />
+    </>
+  );
+}
+```
+
+### `frontend/src/components/Footer.tsx`
+
+```tsx
+import React from 'react';
+import { fire } from '@/lib/events';
+
+export default function Footer() {
+  return (
+    <footer className="mt-20 border-t py-6 text-sm text-gray-600">
+      <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3">
+        <div>© {new Date().getFullYear()} SafetySync.ai</div>
+        <nav className="flex items-center gap-4">
+          <button onClick={() => fire('open-cookie-settings')} className="underline">Cookies</button>
+          <a className="underline" href="/privacy">Privacy</a>
+          <a className="underline" href="/terms">Terms</a>
+        </nav>
+      </div>
+    </footer>
+  );
+}
+```
+
+### `frontend/src/pages/PrivacyPolicy.tsx`
+
+```tsx
+import React from 'react';
+
+export default function PrivacyPolicy() {
+  return (
+    <main className="max-w-3xl mx-auto px-4 py-10 prose prose-gray">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: {new Date().toLocaleDateString()}</p>
+      <p>SafetySync.ai ("we", "us") provides software that helps businesses manage safety training recordkeeping and compliance. This Privacy Policy explains how we collect, use, and share information when you use our website and services.</p>
+      <h2>Information We Collect</h2>
+      <ul>
+        <li><strong>Account & Contact Data:</strong> name, email, company, role.</li>
+        <li><strong>Usage Data:</strong> pages viewed, actions taken, device/browser info, IP address.</li>
+        <li><strong>Customer Content:</strong> training records and documents you upload to the platform.</li>
+        <li><strong>Cookies & Similar:</strong> essential, analytics, marketing, and preference cookies as chosen in your settings.</li>
+      </ul>
+      <h2>How We Use Information</h2>
+      <ul>
+        <li>Provide and secure the services, including authentication and fraud prevention.</li>
+        <li>Operate features such as certification tracking and document storage.</li>
+        <li>Analyze usage (in aggregate) to improve performance and usability.</li>
+        <li>Communicate with you about updates, security notices, and support.</li>
+        <li>Comply with legal obligations.</li>
+      </ul>
+      <h2>Legal Bases (EEA/UK users)</h2>
+      <ul>
+        <li>Contract (to provide the services you request)</li>
+        <li>Legitimate interests (e.g., service improvement, security)</li>
+        <li>Consent (for non‑essential cookies/marketing)</li>
+        <li>Legal obligation (where applicable)</li>
+      </ul>
+      <h2>Sharing</h2>
+      <p>We may share personal data with service providers who process data on our behalf (e.g., cloud hosting, analytics, support). We require appropriate confidentiality and security commitments. We do not sell personal data.</p>
+      <h2>Retention</h2>
+      <p>We retain data for as long as necessary to provide the services, comply with legal obligations, resolve disputes, and enforce agreements. You may request deletion subject to applicable law and contractual obligations.</p>
+      <h2>Your Choices</h2>
+      <ul>
+        <li>Cookie settings: manage optional cookies via the Cookies link in the footer.</li>
+        <li>Marketing: opt out using unsubscribe links or by contacting us.</li>
+        <li>Access/Deletion/Correction: contact us to exercise rights under applicable laws (e.g., GDPR/CCPA).</li>
+      </ul>
+      <h2>Security</h2>
+      <p>We implement technical and organizational measures to protect information. No system is 100% secure.</p>
+      <h2>International Transfers</h2>
+      <p>We may transfer personal data to countries with different data protection laws. Where required, we use appropriate safeguards.</p>
+      <h2>Children</h2>
+      <p>Our services are not directed to children under 16. We do not knowingly collect personal data from children.</p>
+      <h2>Contact Us</h2>
+      <p>For questions or privacy requests, contact: privacy@safetysync.ai</p>
+      <h2>Changes</h2>
+      <p>We may update this policy. Material changes will be posted on this page with a new “Last updated” date.</p>
+    </main>
+  );
+}
+```
+
+### `frontend/src/pages/TermsOfService.tsx`
+
+```tsx
+import React from 'react';
+
+export default function TermsOfService() {
+  return (
+    <main className="max-w-3xl mx-auto px-4 py-10 prose prose-gray">
+      <h1>Terms of Service</h1>
+      <p>Last updated: {new Date().toLocaleDateString()}</p>
+      <h2>1. Agreement</h2>
+      <p>These Terms govern your use of SafetySync.ai. By accessing or using the services, you agree to these Terms.</p>
+      <h2>2. Accounts & Access</h2>
+      <p>You must provide accurate information and maintain the security of your account credentials. You are responsible for activities under your account.</p>
+      <h2>3. Acceptable Use</h2>
+      <ul>
+        <li>No illegal, harmful, or infringing content or activity.</li>
+        <li>No attempts to disrupt or reverse engineer the service.</li>
+        <li>Compliant with applicable laws/regulations (including OSHA & data protection laws as relevant).</li>
+      </ul>
+      <h2>4. Customer Content</h2>
+      <p>You retain ownership of content you upload. You grant us a limited license to host and process content to provide the services. You represent you have rights to the content you upload.</p>
+      <h2>5. Privacy</h2>
+      <p>Your use is subject to our <a href="/privacy">Privacy Policy</a>.</p>
+      <h2>6. Fees</h2>
+      <p>Paid plans, invoices, taxes, and payment terms (e.g., Net 30, POs) are described at purchase. Fees are non‑refundable except as required by law or expressly stated.</p>
+      <h2>7. Service Availability & Support</h2>
+      <p>We aim for high availability but do not guarantee uninterrupted service. Support channels and response targets may be defined in your plan or support policy.</p>
+      <h2>8. Intellectual Property</h2>
+      <p>We retain all rights in the services and underlying technology. No license is granted except as expressly set forth.</p>
+      <h2>9. Disclaimers</h2>
+      <p>Services are provided “as is” without warranties of any kind, to the maximum extent permitted by law.</p>
+      <h2>10. Limitation of Liability</h2>
+      <p>To the maximum extent permitted by law, our aggregate liability shall not exceed the amounts paid by you in the 12 months before the claim.</p>
+      <h2>11. Indemnification</h2>
+      <p>You agree to indemnify us from claims arising from your use or violation of these Terms.</p>
+      <h2>12. Suspension & Termination</h2>
+      <p>We may suspend or terminate access for violations or risks to the service. You may terminate per your plan terms; certain sections survive termination.</p>
+      <h2>13. Governing Law & Disputes</h2>
+      <p>Specify governing law/venue (e.g., Texas, USA). Dispute resolution process (e.g., arbitration) may apply.</p>
+      <h2>14. Changes to Terms</h2>
+      <p>We may update these Terms. Continued use after changes constitutes acceptance.</p>
+      <h2>15. Contact</h2>
+      <p>Questions? terms@safetysync.ai</p>
+    </main>
+  );
+}
+```
+
+### `frontend/src/main.tsx` (router wiring example)
+
+```tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import App from './App';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import TermsOfService from '@/pages/TermsOfService';
+
+const router = createBrowserRouter([
+  { path: '/', element: <App /> },
+  { path: '/privacy', element: <PrivacyPolicy /> },
+  { path: '/terms', element: <TermsOfService /> },
+]);
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
+```
+
+### `frontend/src/App.tsx`
+
+```tsx
+import React from 'react';
+import Analytics from '@/components/Analytics';
+import CookieConsent from '@/components/CookieConsent';
+import Footer from '@/components/Footer';
+
+export default function App() {
+  return (
+    <>
+      {/* your homepage sections here */}
+      <Footer />
+      <Analytics />
+      <CookieConsent />
+    </>
+  );
+}
+```
+
+### `frontend/.env` (optional)
+
+```
+VITE_GA_ID=G-XXXXXXXXXX
+VITE_API_URL=https://YOUR-BACKEND-URL   # leave empty if same origin
+```
+
+---
+
+## BACKEND
+
+### `backend/prisma/schema.prisma`
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ConsentEvent {
+  id          String   @id @default(uuid())
+  sessionId   String?
+  userId      String?
+  action      String
+  categories  Json
+  page        String?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([createdAt])
+  @@index([sessionId])
+}
+```
+
+### Install & init (run in backend folder)
+
+```bash
+npm i -D prisma
+npm i @prisma/client cors express
+npx prisma init --datasource-provider postgresql
+npx prisma migrate dev --name init_consent
+npx prisma generate
+```
+
+### `backend/server/db/prisma.ts`
+
+```ts
+import { PrismaClient } from '@prisma/client';
+export const prisma = new PrismaClient();
+```
+
+### `backend/server/middleware/adminKey.ts`
+
+```ts
+import { Request, Response, NextFunction } from 'express';
+
+export function requireAdminKey(req: Request, res: Response, next: NextFunction) {
+  const key = process.env.ADMIN_API_KEY;
+  if (!key) return res.status(500).json({ error: 'admin_key_not_set' });
+  const auth = req.headers['authorization'];
+  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : (req.headers['x-api-key'] as string);
+  if (token !== key) return res.status(401).json({ error: 'unauthorized' });
+  next();
+}
+```
+
+### `backend/server/index.ts`
+
+```ts
+import express from 'express';
+import cors from 'cors';
+import { prisma } from './db/prisma';
+import { requireAdminKey } from './middleware/adminKey';
+
+const app = express();
+app.use(express.json());
+
+const allowed = process.env.ALLOWED_ORIGIN || 'https://safetysync.ai';
+app.use(cors({ origin: allowed, credentials: true }));
+
+app.get('/api/health', async (_req, res) => {
+  try { await prisma.$queryRaw`SELECT 1`; res.json({ ok: true }); }
+  catch { res.status(500).json({ ok: false, error: 'db_unreachable' }); }
+});
+
+app.post('/api/consent', async (req, res) => {
+  try {
+    const { categories, action, sessionId, userId, page } = req.body || {};
+    if (!categories || !action) return res.status(400).json({ error: 'Missing categories or action' });
+    const ip = (req.headers['cf-connecting-ip'] as string) || (req.ip as string) || undefined;
+    const userAgent = (req.headers['user-agent'] as string) || undefined;
+    await prisma.consentEvent.create({ data: { sessionId: sessionId || null, userId: userId || null, action, categories, page: page || null, ip, userAgent } });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('consent insert failed', e);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+app.get('/api/consent/recent', requireAdminKey, async (_req, res) => {
+  const rows = await prisma.consentEvent.findMany({ orderBy: { createdAt: 'desc' }, take: 200 });
+  res.json(rows);
+});
+
+app.get('/api/consent/export.csv', requireAdminKey, async (req, res) => {
+  const { start, end, action, limit } = req.query as { [k: string]: string };
+  const where: any = {};
+  if (start || end) {
+    where.createdAt = {};
+    if (start) where.createdAt.gte = new Date(start);
+    if (end) where.createdAt.lte = new Date(end);
+  }
+  if (action) where.action = action;
+  const take = Math.min(Number(limit || 10000), 50000);
+  const rows = await prisma.consentEvent.findMany({ where, orderBy: { createdAt: 'desc' }, take });
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="consent_export_${Date.now()}.csv"`);
+  const header = ['id','createdAt','action','sessionId','userId','page','ip','userAgent','categories'].join(',');
+  res.write(header + '\n');
+
+  for (const r of rows) {
+    const fields = [
+      r.id,
+      r.createdAt.toISOString(),
+      r.action,
+      r.sessionId ?? '',
+      r.userId ?? '',
+      r.page ?? '',
+      r.ip ?? '',
+      (r.userAgent ?? '').replace(/\n|\r|,/g, ' '),
+      JSON.stringify(r.categories)
+    ];
+    const line = fields.map((s) => {
+      const str = String(s);
+      return /[",\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+    }).join(',');
+    res.write(line + '\n');
+  }
+  res.end();
+});
+
+export default app;
+```
+
+### `backend/server/jobs/retention.ts`
+
+```ts
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+async function main() {
+  const months = parseInt(process.env.CONSENT_RETENTION_MONTHS || '18', 10);
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - months);
+  const result = await prisma.consentEvent.deleteMany({ where: { createdAt: { lt: cutoff } } });
+  console.log(`Deleted ${result.count} consent events older than ${months} months (cutoff ${cutoff.toISOString()})`);
+}
+
+main()
+  .then(() => prisma.$disconnect())
+  .catch((e) => { console.error(e); return prisma.$disconnect().finally(() => process.exit(1)); });
+```
+
+### `backend/package.json` (scripts)
+
+```json
+{
+  "scripts": {
+    "build": "tsc -p .",
+    "postinstall": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "start": "node dist/index.js"
+  }
+}
+```
+
+### `backend/.env`
+
+```
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME?schema=public
+ALLOWED_ORIGIN=https://safetysync.ai
+ADMIN_API_KEY=super-long-random-string
+CONSENT_RETENTION_MONTHS=18
+```
+
+### Render deploy settings (backend)
+
+**Build Command**
+
+```
+npm ci
+npm run build
+npx prisma generate
+npx prisma migrate deploy
+```
+
+**Start Command**
+
+```
+node dist/index.js
+```
+
+**Cron Job**
+
+* Schedule: `0 4 * * *`
+* Command: `node dist/jobs/retention.js`
+
+---
+
+## POSTMAN COLLECTION (import to Postman after backend is live)
+
+Save as `SafetySyncCookieAPI.postman_collection.json` and import.
+
+```json
+{
+  "info": {
+    "name": "SafetySync.ai Cookie Consent API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw": "{{BASE_URL}}/api/health", "host": ["{{BASE_URL}}"], "path": ["api","health"]}
+      }
+    },
+    {
+      "name": "Post Consent",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"action\": \"accept_all\",\n  \"categories\": {\"essential\": true, \"analytics\": true, \"marketing\": true, \"preferences\": true},\n  \"page\": \"/\",\n  \"sessionId\": \"test-session-id\"\n}"},
+        "url": {"raw": "{{BASE_URL}}/api/consent", "host": ["{{BASE_URL}}"], "path": ["api","consent"]}
+      }
+    },
+    {
+      "name": "Recent Consents",
+      "request": {
+        "method": "GET",
+        "header": [{"key":"x-api-key","value":"{{ADMIN_API_KEY}}"}],
+        "url": {"raw": "{{BASE_URL}}/api/consent/recent", "host": ["{{BASE_URL}}"], "path": ["api","consent","recent"]}
+      }
+    },
+    {
+      "name": "Export Consent CSV",
+      "request": {
+        "method": "GET",
+        "header": [{"key":"x-api-key","value":"{{ADMIN_API_KEY}}"}],
+        "url": {"raw": "{{BASE_URL}}/api/consent/export.csv", "host": ["{{BASE_URL}}"], "path": ["api","consent","export.csv"]}
+      }
+    }
+  ],
+  "variable": [
+    {"key":"BASE_URL","value":"https://your-backend-url"},
+    {"key":"ADMIN_API_KEY","value":"your-admin-key"}
+  ]
+}
+```
+
+---
+
+## QUICK SETUP CHECKLIST
+
+1. Paste files in the exact paths.
+2. Backend: set env vars; run Prisma init/migrate; deploy.
+3. Frontend: set `VITE_API_URL` (if needed) + GA ID; deploy to Cloudflare Pages.
+4. Test banner → Accept/Reject/Save → verify DB with `/api/consent/recent`.
+5. Download CSV via `/api/consent/export.csv` using your admin key.
+
+Ping me when you’re ready for the Cloudflare cache rules and we’ll flip those on, too.
