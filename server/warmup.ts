@@ -1,16 +1,19 @@
-import fetch from "node-fetch";
+// Keep the Render instance warm by pinging the API every 4 minutes.
+// Uses Node 18+ built-in fetch (no dependency needed).
 
-const url = process.env.WARMUP_URL || "https://safetysync-ai-web-v2.onrender.com/api/ping";
+const warmupUrl =
+  process.env.WARMUP_URL ||
+  "https://safetysync-ai-web-v2.onrender.com/api/ping";
 
 async function keepAlive() {
   try {
-    const res = await fetch(url);
-    console.log(`[Warmup] Pinged ${url} - Status: ${res.status}`);
+    const res = await fetch(warmupUrl, { method: "GET" });
+    console.log(`[Warmup] Ping ${warmupUrl} → ${res.status}`);
   } catch (err) {
-    console.error("[Warmup] Error pinging:", err);
+    console.error("[Warmup] Error:", err);
   }
 }
 
-// Run immediately and every 4 minutes
+// Run immediately, then every 4 minutes
 keepAlive();
 setInterval(keepAlive, 4 * 60 * 1000);
