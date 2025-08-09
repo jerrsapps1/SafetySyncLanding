@@ -40,15 +40,15 @@ export default function CookieConsent() {
 
       {/* Banner / Modal container */}
       <div className={`mx-auto max-w-xl rounded-t-2xl md:rounded-2xl shadow-2xl border border-white/20 bg-gray-900/95 backdrop-blur-xl m-4 ${open ? 'md:fixed md:inset-0 md:max-w-lg md:m-auto md:translate-x-[-50%] md:translate-y-[-50%] md:left-[50%] md:top-[50%]' : ''}`}>
-        <div className="p-5">
-          <h2 className="text-lg font-semibold text-white mb-1">Cookies & Privacy</h2>
-          <p className="text-sm text-gray-300 mb-4">
+        <div className="p-7">
+          <h2 className="text-lg font-semibold text-white mb-3">Cookies & Privacy</h2>
+          <p className="text-sm text-gray-300 mb-6">
             We use cookies to make SafetySync.ai work and to improve your experience. You can control optional categories.
           </p>
 
           {/* Preferences */}
-          <form onSubmit={onSave} className="space-y-3">
-            <div className="flex items-center gap-3 p-2.5 rounded-md bg-gray-800/40 border border-white/10">
+          <form onSubmit={onSave} className="space-y-4">
+            <div className="flex items-center gap-4 p-4 rounded-md bg-gray-800/40 border border-white/10">
               <input 
                 type="checkbox" 
                 checked 
@@ -56,12 +56,12 @@ export default function CookieConsent() {
                 className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
               />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-white text-sm">Essential</div>
+                <div className="font-medium text-white text-sm mb-1">Essential</div>
                 <div className="text-xs text-gray-400">Required for basic site functionality. Always on.</div>
               </div>
             </div>
 
-            <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
+            <label className="flex items-center gap-4 cursor-pointer p-4 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
               <input 
                 type="checkbox" 
                 className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
@@ -69,12 +69,12 @@ export default function CookieConsent() {
                 onChange={(e) => setConsent({ analytics: e.target.checked })} 
               />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-white text-sm">Analytics</div>
+                <div className="font-medium text-white text-sm mb-1">Analytics</div>
                 <div className="text-xs text-gray-400">Helps us understand usage to improve the product.</div>
               </div>
             </label>
 
-            <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
+            <label className="flex items-center gap-4 cursor-pointer p-4 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
               <input 
                 type="checkbox" 
                 className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
@@ -82,12 +82,12 @@ export default function CookieConsent() {
                 onChange={(e) => setConsent({ marketing: e.target.checked })} 
               />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-white text-sm">Marketing</div>
+                <div className="font-medium text-white text-sm mb-1">Marketing</div>
                 <div className="text-xs text-gray-400">Used to personalize offers and measure campaigns.</div>
               </div>
             </label>
 
-            <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
+            <label className="flex items-center gap-4 cursor-pointer p-4 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
               <input 
                 type="checkbox" 
                 className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
@@ -95,12 +95,12 @@ export default function CookieConsent() {
                 onChange={(e) => setConsent({ preferences: e.target.checked })} 
               />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-white text-sm">Preferences</div>
+                <div className="font-medium text-white text-sm mb-1">Preferences</div>
                 <div className="text-xs text-gray-400">Remembers your settings, like language or region.</div>
               </div>
             </label>
 
-            <div className="mt-5 flex flex-col-reverse sm:flex-row gap-2">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row gap-3">
               <button 
                 type="button" 
                 onClick={onRejectAll} 
