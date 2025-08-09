@@ -39,7 +39,7 @@ export default function CookieConsent() {
       )}
 
       {/* Banner / Modal container */}
-      <div className={`mx-auto max-w-2xl rounded-t-2xl md:rounded-2xl shadow-2xl border border-white/20 bg-gray-900/95 backdrop-blur-xl m-4 ${open ? 'md:fixed md:inset-0 md:max-w-xl md:m-auto md:translate-x-[-50%] md:translate-y-[-50%] md:left-[50%] md:top-[50%] md:h-fit' : ''}`}>
+      <div className={`mx-auto max-w-2xl rounded-t-2xl md:rounded-2xl shadow-2xl border border-white/20 bg-gray-900/95 backdrop-blur-xl m-4 ${open ? 'md:fixed md:inset-0 md:max-w-xl md:m-auto md:translate-x-[-50%] md:translate-y-[-50%] md:left-[50%] md:top-[60%] md:h-fit' : ''}`}>
         <div className="p-7">
           <h2 className="text-lg font-semibold text-white mb-3">Cookies & Privacy</h2>
           <p className="text-sm text-gray-300 mb-6">
