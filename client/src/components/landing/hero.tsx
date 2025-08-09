@@ -67,11 +67,23 @@ export default function Hero() {
         
         <div className="mt-16 pt-8 border-t border-white/10">
           <p className="text-gray-500 text-sm mb-6">Trusted by safety professionals at</p>
-          <div className="flex items-center justify-center space-x-8 opacity-60">
-            <div className="text-gray-400 font-semibold">ACME Corp</div>
-            <div className="text-gray-400 font-semibold">BuildSafe Inc</div>
-            <div className="text-gray-400 font-semibold">Industrial Partners</div>
-            <div className="text-gray-400 font-semibold">SafetyFirst Ltd</div>
+          <div className="flex items-center justify-center space-x-12 opacity-60">
+            {/* Company Logo Placeholders - Replace with actual logos */}
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
+              <div className="text-xs text-gray-500 font-medium">LOGO</div>
+            </div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
+              <div className="text-xs text-gray-500 font-medium">LOGO</div>
+            </div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
+              <div className="text-xs text-gray-500 font-medium">LOGO</div>
+            </div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
+              <div className="text-xs text-gray-500 font-medium">LOGO</div>
+            </div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
+              <div className="text-xs text-gray-500 font-medium">LOGO</div>
+            </div>
           </div>
         </div>
       </div>
