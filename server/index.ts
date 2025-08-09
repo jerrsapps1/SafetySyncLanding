@@ -1,4 +1,15 @@
-import "./warmup";
+// Warmup logic — pings the app every 14 minutes to prevent cold starts
+if (process.env.RENDER) {
+  const interval = 14 * 60 * 1000; // 14 minutes
+  const url = process.env.WARMUP_URL || `https://${process.env.RENDER_EXTERNAL_HOSTNAME}/api/ping`;
+  setInterval(() => {
+    fetch(url)
+      .then((res) => res.text())
+      .then((text) => console.log(`[warmup] Pinged: ${url} -> ${text}`))
+      .catch((err) => console.error("[warmup] Error:", err));
+  }, interval);
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
@@ -56,9 +67,7 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     res.status(status).json({ message });
-    try {
-      log(`ERROR ${status}: ${message}`);
-    } catch {}
+    try { log(`ERROR ${status}: ${message}`); } catch {}
     throw err;
   });
 
