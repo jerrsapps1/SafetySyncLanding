@@ -7,6 +7,18 @@ import { postConsent } from '@/lib/consent-api';
 export default function CookieConsent() {
   const { consent, isSet, acceptAll, rejectAll, setConsent } = useConsent();
   const [open, setOpen] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
+
+  // Show banner after 10 seconds if consent not set
+  React.useEffect(() => {
+    if (!isSet) {
+      const timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 10000); // 10 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [isSet]);
 
   // Listen for event to open cookie settings from footer
   React.useEffect(() => {
@@ -14,21 +26,27 @@ export default function CookieConsent() {
   }, []);
 
   if (isSet && !open) return null; // hide banner after decision unless settings modal opened
+  if (!isSet && !showBanner && !open) return null; // hide banner until 10 seconds pass or manually opened
 
   const onSave = (e?: React.FormEvent) => {
     e?.preventDefault();
     postConsent('save', consent, window.location.pathname);
     setOpen(false);
+    setShowBanner(false);
   };
 
   const onAcceptAll = () => {
     acceptAll();
     postConsent('accept_all', { ...consent, analytics: true, marketing: true, preferences: true }, window.location.pathname);
+    setOpen(false);
+    setShowBanner(false);
   };
 
   const onRejectAll = () => {
     rejectAll();
     postConsent('reject_all', { ...consent, analytics: false, marketing: false, preferences: false }, window.location.pathname);
+    setOpen(false);
+    setShowBanner(false);
   };
 
   return (
