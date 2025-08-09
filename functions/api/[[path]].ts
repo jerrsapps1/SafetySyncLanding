@@ -1,21 +1,40 @@
 // Cloudflare Pages Functions: proxy /api/* to your backend
 export async function onRequest({ request, params, env }: any) {
-  const incomingUrl = new URL(request.url);
+  const url = new URL(request.url);
+  const tail = (params?.path as string) || "";
 
-  // BACKEND_ORIGIN must be set in Cloudflare Pages → Settings → Functions → Environment variables (Bindings)
-  // e.g. https://safetysync-ai-web.onrender.com
-  const backendOrigin = env.BACKEND_ORIGIN as string;
+  // ---- Self-tests (hit these from the browser) ----
+  if (tail === "ping") {
+    return new Response("pong", { status: 200 });
+  }
+  if (tail === "__env") {
+    // Return whether BACKEND_ORIGIN is visible to this function
+    return Response.json({
+      ok: true,
+      hasBackendOrigin: Boolean(env.BACKEND_ORIGIN),
+      backendOriginSample: env.BACKEND_ORIGIN?.slice(0, 40) || null,
+    });
+  }
+  // -------------------------------------------------
+
+  const backendOrigin = env.BACKEND_ORIGIN as string | undefined;
   if (!backendOrigin) {
-    return new Response("Missing BACKEND_ORIGIN binding", { status: 500 });
+    return Response.json(
+      {
+        ok: false,
+        error: "Missing BACKEND_ORIGIN binding. Add it in Pages → Settings → Variables & Secrets.",
+        hint: "Set BACKEND_ORIGIN to your backend base URL, e.g. https://safetysync-ai-web.onrender.com",
+      },
+      { status: 500 },
+    );
   }
 
-  // Build target URL: {BACKEND_ORIGIN}/api/<path>?<query>
+  // Compose target URL: {BACKEND_ORIGIN}/api/<tail>?<query>
   const target = new URL(backendOrigin);
-  const tail = (params?.path as string) || "";
   target.pathname = `/api/${tail}`;
-  target.search = incomingUrl.search;
+  target.search = url.search;
 
-  // Forward the original request (method/headers/body). Cloudflare will drop hop-by-hop headers.
+  // Forward original request
   const init: RequestInit = {
     method: request.method,
     headers: request.headers,
@@ -23,10 +42,9 @@ export async function onRequest({ request, params, env }: any) {
     redirect: "follow",
   };
 
-  // Do the fetch to your backend
   const resp = await fetch(new Request(target.toString(), init));
 
-  // Return the backend response as-is (you can tweak headers here if needed)
+  // Pass through response (you can adjust headers here if needed)
   return new Response(resp.body, {
     status: resp.status,
     statusText: resp.statusText,
