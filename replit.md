@@ -44,7 +44,9 @@ Design preference: Tech-forward, modern design with sophisticated animations and
 
 ### Privacy & Compliance System
 - **Cookie Consent Management**: Comprehensive `useConsent` hook with granular category controls (essential, analytics, marketing, preferences)
-- **Interactive Consent Banner**: Professional dark-themed modal with user-friendly controls and persistence via localStorage
+- **Interactive Consent Banner**: Sophisticated dark-themed modal matching SafetySync.ai's glassmorphism design with proper spacing, positioning, and user-friendly controls
+- **Theme Integration**: Cookie banner styled with gray-900/95 background, backdrop-blur-xl, blue gradient buttons, and consistent typography matching the site's design language
+- **Modal Positioning**: Optimized modal placement at 80% from top with proper centering and responsive sizing (max-w-2xl for banner, max-w-xl for modal)
 - **Legal Pages**: GDPR/CCPA compliant Privacy Policy and Terms of Service with proper legal frameworks
 - **Event-Driven Architecture**: Custom event system for reopening cookie settings from footer
 - **Security Headers**: Configured `_headers` file with DENY frame options, HSTS, and content type protection
