@@ -69,21 +69,11 @@ export default function Hero() {
           <p className="text-gray-500 text-sm mb-6">Trusted by safety professionals at</p>
           <div className="flex items-center justify-center space-x-12 opacity-60">
             {/* Company Logo Placeholders - Replace with actual logos */}
-            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
-              <div className="text-xs text-gray-500 font-medium">LOGO</div>
-            </div>
-            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
-              <div className="text-xs text-gray-500 font-medium">LOGO</div>
-            </div>
-            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
-              <div className="text-xs text-gray-500 font-medium">LOGO</div>
-            </div>
-            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
-              <div className="text-xs text-gray-500 font-medium">LOGO</div>
-            </div>
-            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg flex items-center justify-center">
-              <div className="text-xs text-gray-500 font-medium">LOGO</div>
-            </div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg"></div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg"></div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg"></div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg"></div>
+            <div className="w-24 h-12 bg-gray-800/40 border border-white/10 rounded-lg"></div>
           </div>
         </div>
       </div>
