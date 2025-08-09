@@ -1,3 +1,4 @@
+import "./warmup";
 import express, { type Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
