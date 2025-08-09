@@ -8,6 +8,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// --- Health check + ping routes ---
+app.get("/api/ping", (_req, res) => {
+  res.json({ ok: true, message: "pong" });
+});
+
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, service: "backend", status: "healthy" });
+});
+
 // Simple API request logging (only /api/*)
 app.use((req, res, next) => {
   const start = Date.now();
@@ -46,18 +55,14 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     res.status(status).json({ message });
-    // Log and rethrow for visibility in logs
     try { log(`ERROR ${status}: ${message}`); } catch {}
     throw err;
   });
 
   // Dev vs Prod behavior
   if (app.get("env") === "development") {
-    // In dev, use Vite middleware (after routes so it doesn't hijack /api)
     await setupVite(app, server);
   } else {
-    // In production on Render, only serve static files if they exist locally.
-    // (Your frontend is built/deployed on Cloudflare Pages, so this usually won't exist.)
     const staticDir = path.resolve(process.cwd(), "dist/public");
     if (fs.existsSync(staticDir)) {
       serveStatic(app);
@@ -67,7 +72,7 @@ app.use((req, res, next) => {
     }
   }
 
-  // Start the server — Render exposes process.env.PORT
+  // Start the server
   const port = parseInt(process.env.PORT || "5000", 10);
   server.listen(
     { port, host: "0.0.0.0", reusePort: true },
