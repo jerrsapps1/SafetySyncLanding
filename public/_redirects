@@ -1,12 +1,20 @@
-/*  /index.html  200
+# Let Pages Functions handle /api/* (no redirect)
+ /api/*   /api/:splat   200
+
+# Long cache for built assets
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Security headers
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
+# index.html should not be cached
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# SPA fallback — keep this LAST
+/*  /index.html 200
