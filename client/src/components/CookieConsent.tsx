@@ -39,79 +39,79 @@ export default function CookieConsent() {
       )}
 
       {/* Banner / Modal container */}
-      <div className={`mx-auto max-w-2xl rounded-t-2xl md:rounded-2xl shadow-2xl border border-white/20 bg-gray-900/95 backdrop-blur-xl m-4 ${open ? 'md:fixed md:inset-0 md:max-w-xl md:m-auto md:translate-x-[-50%] md:translate-y-[-50%] md:left-[50%] md:top-[50%]' : ''}`}>
-        <div className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-2">Cookies & Privacy</h2>
-          <p className="text-sm text-gray-300 mb-6">
+      <div className={`mx-auto max-w-lg rounded-t-2xl md:rounded-2xl shadow-2xl border border-white/20 bg-gray-900/95 backdrop-blur-xl m-4 ${open ? 'md:fixed md:inset-0 md:max-w-md md:m-auto md:translate-x-[-50%] md:translate-y-[-50%] md:left-[50%] md:top-[50%]' : ''}`}>
+        <div className="p-5">
+          <h2 className="text-lg font-semibold text-white mb-1">Cookies & Privacy</h2>
+          <p className="text-sm text-gray-300 mb-4">
             We use cookies to make SafetySync.ai work and to improve your experience. You can control optional categories.
           </p>
 
           {/* Preferences */}
-          <form onSubmit={onSave} className="space-y-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-800/50 border border-white/10">
+          <form onSubmit={onSave} className="space-y-3">
+            <div className="flex items-center gap-3 p-2.5 rounded-md bg-gray-800/40 border border-white/10">
               <input 
                 type="checkbox" 
                 checked 
                 readOnly 
-                className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900" 
+                className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
               />
-              <div>
-                <div className="font-medium text-white">Essential</div>
-                <div className="text-sm text-gray-400">Required for basic site functionality. Always on.</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-white text-sm">Essential</div>
+                <div className="text-xs text-gray-400">Required for basic site functionality. Always on.</div>
               </div>
             </div>
 
-            <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg bg-gray-800/50 border border-white/10 hover:bg-gray-800/70 transition-colors">
+            <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
               <input 
                 type="checkbox" 
-                className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900" 
+                className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
                 checked={consent.analytics} 
                 onChange={(e) => setConsent({ analytics: e.target.checked })} 
               />
-              <div>
-                <div className="font-medium text-white">Analytics</div>
-                <div className="text-sm text-gray-400">Helps us understand usage to improve the product.</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-white text-sm">Analytics</div>
+                <div className="text-xs text-gray-400">Helps us understand usage to improve the product.</div>
               </div>
             </label>
 
-            <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg bg-gray-800/50 border border-white/10 hover:bg-gray-800/70 transition-colors">
+            <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
               <input 
                 type="checkbox" 
-                className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900" 
+                className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
                 checked={consent.marketing} 
                 onChange={(e) => setConsent({ marketing: e.target.checked })} 
               />
-              <div>
-                <div className="font-medium text-white">Marketing</div>
-                <div className="text-sm text-gray-400">Used to personalize offers and measure campaigns.</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-white text-sm">Marketing</div>
+                <div className="text-xs text-gray-400">Used to personalize offers and measure campaigns.</div>
               </div>
             </label>
 
-            <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg bg-gray-800/50 border border-white/10 hover:bg-gray-800/70 transition-colors">
+            <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-md bg-gray-800/40 border border-white/10 hover:bg-gray-800/60 transition-colors">
               <input 
                 type="checkbox" 
-                className="mt-1 h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900" 
+                className="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-1 focus:ring-blue-500 focus:ring-offset-0" 
                 checked={consent.preferences} 
                 onChange={(e) => setConsent({ preferences: e.target.checked })} 
               />
-              <div>
-                <div className="font-medium text-white">Preferences</div>
-                <div className="text-sm text-gray-400">Remembers your settings, like language or region.</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-white text-sm">Preferences</div>
+                <div className="text-xs text-gray-400">Remembers your settings, like language or region.</div>
               </div>
             </label>
 
-            <div className="mt-6 flex flex-col-reverse sm:flex-row gap-3">
+            <div className="mt-5 flex flex-col-reverse sm:flex-row gap-2">
               <button 
                 type="button" 
                 onClick={onRejectAll} 
-                className="px-4 py-2 rounded-lg border border-white/20 text-gray-300 text-sm hover:bg-gray-800/50 transition-colors"
+                className="px-3 py-1.5 rounded-md border border-white/20 text-gray-300 text-xs hover:bg-gray-800/50 transition-colors"
                 data-testid="button-reject-all"
               >
                 Reject non‑essential
               </button>
               <button 
                 type="submit" 
-                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-sm transition-colors"
+                className="px-3 py-1.5 rounded-md bg-gray-700 hover:bg-gray-600 text-white text-xs transition-colors"
                 data-testid="button-save-choices"
               >
                 Save choices
@@ -119,14 +119,14 @@ export default function CookieConsent() {
               <button 
                 type="button" 
                 onClick={onAcceptAll} 
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm transition-all duration-300"
+                className="px-3 py-1.5 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs transition-all duration-300"
                 data-testid="button-accept-all"
               >
                 Accept all
               </button>
             </div>
 
-            <div className="mt-4 text-xs text-gray-400 text-center">
+            <div className="mt-3 text-xs text-gray-400 text-center">
               Read our{' '}
               <a className="underline hover:text-white transition-colors" href="/privacy-policy" data-testid="link-privacy-policy">
                 Privacy Policy
